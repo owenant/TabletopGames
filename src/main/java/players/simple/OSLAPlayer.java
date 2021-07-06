@@ -77,10 +77,9 @@ public class OSLAPlayer extends AbstractPlayer {
         // we assume that every other player now has to make a decision
         RandomPlayer rnd = new RandomPlayer(random);
         AbstractForwardModel fm = getForwardModel();
-        for (int p = 0; p < gsCopy.getNPlayers() - 1; p++) {
-            if (gsCopy.getCurrentPlayer() == getPlayerID()) {
-                throw new AssertionError("Not expecting to return to player " + getPlayerID());
-            }
+        SimultaneousTurnOrder to = (SimultaneousTurnOrder) gsCopy.getTurnOrder();
+        for (int p = 0; p < gsCopy.getNPlayers(); p++) {
+            if (to.playerPlayed(p)) continue;
             AbstractAction action = rnd.getAction(gsCopy, fm.computeAvailableActions(gsCopy));
             fm.next(gsCopy, action);
         }

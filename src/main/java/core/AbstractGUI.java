@@ -30,7 +30,7 @@ public abstract class AbstractGUI extends JFrame {
     protected JLabel gameStatus, playerStatus, turnOwner, turn, currentPlayer, gamePhase, playerScores;
     protected JTextPane historyInfo;
     protected JScrollPane historyContainer;
-    private int actionsAtLastUpdate;
+    protected int actionsAtLastUpdate;
     private WindowInput wi;
 
     protected int width, height;

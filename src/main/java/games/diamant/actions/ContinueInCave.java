@@ -3,11 +3,16 @@ package games.diamant.actions;
 import core.AbstractGameState;
 import core.actions.AbstractAction;
 import core.interfaces.IPrintable;
+import games.diamant.DiamantGameState;
+import games.diamant.DiamantTurnOrder;
 
 public class ContinueInCave extends AbstractAction implements IPrintable {
     @Override
     public boolean execute(AbstractGameState gs) {
-        // Nothing to be executed. The actions are executed in the ForwardModel
+        DiamantGameState dgs = (DiamantGameState) gs;
+        DiamantTurnOrder to = (DiamantTurnOrder) dgs.getTurnOrder();
+        to.play(dgs.getCurrentPlayer(), this);
+        to.endPlayerTurn(dgs);
         return true;
     }
 
@@ -30,6 +35,11 @@ public class ContinueInCave extends AbstractAction implements IPrintable {
 
     @Override
     public String getString(AbstractGameState gameState) {
-        return "Continue in cave";
+        return toString();
+    }
+
+    @Override
+    public String toString() {
+        return "Continue";
     }
 }

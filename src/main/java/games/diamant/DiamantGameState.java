@@ -6,15 +6,10 @@ import core.components.Component;
 import core.components.Counter;
 import core.components.Deck;
 import core.interfaces.IPrintable;
-import core.turnorders.SimultaneousTurnOrder;
 import games.GameType;
 import games.diamant.cards.DiamantCard;
-import games.diamant.components.ActionsPlayed;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 import static core.CoreConstants.PARTIAL_OBSERVABLE;
 
@@ -24,21 +19,11 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
     Deck<DiamantCard>          path;
 
     List<Counter> treasureChests;
-    List<Counter> hands;
+    List<Counter> gemsInHand;
     List<Boolean> playerInCave;
 
-    int nGemsOnPath             = 0;
-    int nHazardPoissonGasOnPath = 0;
-    int nHazardScorpionsOnPath  = 0;
-    int nHazardSnakesOnPath     = 0;
-    int nHazardRockfallsOnPath  = 0;
-    int nHazardExplosionsOnPath = 0;
-
-    int nCave = 0;
-
-    // This component store the actions played for the rest of players.
-    // It is needed since in this game, actions are simultaneously played
-    ActionsPlayed actionsPlayed;
+    Counter nGemsOnPath;
+    HashMap<DiamantCard.HazardType, Counter> nHazardsOnPath;
 
     /**
      * Constructor. Initialises some generic game state variables.
@@ -47,7 +32,7 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
      * @param nPlayers      - number of players for this game.
      */
     public DiamantGameState(AbstractParameters gameParameters, int nPlayers) {
-        super(gameParameters, new SimultaneousTurnOrder(nPlayers), GameType.Diamant);
+        super(gameParameters, new DiamantTurnOrder(nPlayers, ((DiamantParameters)gameParameters).nCaves), GameType.Diamant);
     }
 
     @Override
@@ -56,9 +41,10 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
             add(mainDeck);
             add(discardDeck);
             add(path);
+            add(nGemsOnPath);
             addAll(treasureChests);
-            addAll(hands);
-            add(actionsPlayed);
+            addAll(gemsInHand);
+            addAll(nHazardsOnPath.values());
         }};
     }
 
@@ -72,41 +58,33 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
         dgs.mainDeck    = mainDeck.copy();
         dgs.discardDeck = discardDeck.copy();
         dgs.path        = path.copy();
-        dgs.actionsPlayed  = (ActionsPlayed) actionsPlayed.copy();
 
         dgs.nGemsOnPath             = nGemsOnPath;
-        dgs.nHazardPoissonGasOnPath = nHazardPoissonGasOnPath;
-        dgs.nHazardScorpionsOnPath  = nHazardScorpionsOnPath;
-        dgs.nHazardSnakesOnPath     = nHazardSnakesOnPath;
-        dgs.nHazardRockfallsOnPath  = nHazardRockfallsOnPath;
-        dgs.nHazardExplosionsOnPath = nHazardExplosionsOnPath;
 
-        dgs.nCave          = nCave;
-        dgs.hands          = new ArrayList<>();
+        dgs.gemsInHand = new ArrayList<>();
         dgs.treasureChests = new ArrayList<>();
-        dgs.playerInCave   = new ArrayList<>();
+        dgs.playerInCave   = new ArrayList<>(playerInCave);
+        dgs.nGemsOnPath = nGemsOnPath.copy();
+        dgs.nHazardsOnPath = new HashMap<>();
+        for (DiamantCard.HazardType ht: nHazardsOnPath.keySet()) {
+            dgs.nHazardsOnPath.put(ht, nHazardsOnPath.get(ht).copy());
+        }
 
-        for (Counter c : hands)
-            dgs.hands.add(c.copy());
+        for (Counter c : gemsInHand)
+            dgs.gemsInHand.add(c.copy());
 
         for (Counter c : treasureChests)
             dgs.treasureChests.add(c.copy());
-
-        // If there is an action played for a player, then copy it
-        for (int i=0; i<getNPlayers(); i++)
-        {
-            if (actionsPlayed.containsKey(i))
-                dgs.actionsPlayed.put(i, actionsPlayed.get(i).copy());
-        }
-
-        dgs.playerInCave.addAll(playerInCave);
 
         // mainDeck and is actionsPlayed are hidden.
         if (PARTIAL_OBSERVABLE && playerId != -1)
         {
             dgs.mainDeck.shuffle(new Random(getGameParameters().getRandomSeed()));
-
-            dgs.actionsPlayed.clear();
+            for (int i = 0; i < getNPlayers(); i++) {
+                if (i != playerId) {
+                    dgs.treasureChests.get(i).setValue(0);
+                }
+            }
 
             // TODO: We also should remove the history entries for the removed actions
             // This is not formally necessary, as nothing currently uses this information, but in
@@ -130,19 +108,24 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
      * of victory points, etc.
      * If a game does not support this directly, then just return 0.0
      *
-     * @param playerId
+     * @param playerId - ID of player
      * @return - double, score of current state
      */
     @Override
     public double getGameScore(int playerId) {
-         return treasureChests.get(playerId).getValue();
+         return treasureChests.get(playerId).getValue() + gemsInHand.get(playerId).getValue();
     }
 
     @Override
     protected ArrayList<Integer> _getUnknownComponentsIds(int playerId)
     {
         ArrayList<Integer> ids = new ArrayList<>();
-        ids.add(actionsPlayed.getComponentID());
+        ids.add(mainDeck.getComponentID());
+        for (int i = 0; i < getNPlayers(); i++) {
+            if (i != playerId) {
+                ids.add(treasureChests.get(i).getComponentID());
+            }
+        }
         return ids;
     }
 
@@ -151,45 +134,25 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
         mainDeck       = null;
         discardDeck    = null;
         path           = null;
-        actionsPlayed  = null;
         treasureChests = new ArrayList<>();
-        hands          = new ArrayList<>();
+        gemsInHand = new ArrayList<>();
         playerInCave   = new ArrayList<>();
-
-        nGemsOnPath             = 0;
-        nHazardPoissonGasOnPath = 0;
-        nHazardScorpionsOnPath  = 0;
-        nHazardSnakesOnPath     = 0;
-        nHazardRockfallsOnPath  = 0;
-        nHazardExplosionsOnPath = 0;
-
-        nCave = 0;
-
+        nGemsOnPath = null;
+        nHazardsOnPath = null;
     }
 
     @Override
-    protected boolean _equals(Object o)
-    {
-        if (this == o)                        return true;
+    public boolean _equals(Object o) {
+        if (this == o) return true;
         if (!(o instanceof DiamantGameState)) return false;
-        if (!super.equals(o))                 return false;
-
+        if (!super.equals(o)) return false;
         DiamantGameState that = (DiamantGameState) o;
+        return Objects.equals(mainDeck, that.mainDeck) && Objects.equals(discardDeck, that.discardDeck) && Objects.equals(path, that.path) && Objects.equals(treasureChests, that.treasureChests) && Objects.equals(gemsInHand, that.gemsInHand) && Objects.equals(playerInCave, that.playerInCave) && Objects.equals(nGemsOnPath, that.nGemsOnPath) && Objects.equals(nHazardsOnPath, that.nHazardsOnPath);
+    }
 
-        return nGemsOnPath             == that.nGemsOnPath             &&
-               nHazardExplosionsOnPath == that.nHazardExplosionsOnPath &&
-               nHazardPoissonGasOnPath == that.nHazardPoissonGasOnPath &&
-               nHazardRockfallsOnPath  == that.nHazardRockfallsOnPath  &&
-               nHazardScorpionsOnPath  == that.nHazardScorpionsOnPath  &&
-               nHazardSnakesOnPath     == that.nHazardSnakesOnPath     &&
-               nCave                   == that.nCave                   &&
-               Objects.equals(mainDeck,       that.mainDeck)           &&
-               Objects.equals(discardDeck,    that.discardDeck)        &&
-               Objects.equals(hands,          that.hands)              &&
-               Objects.equals(treasureChests, that.treasureChests)     &&
-               Objects.equals(path,           that.path)               &&
-               Objects.equals(playerInCave,   that.playerInCave)       &&
-               Objects.equals(actionsPlayed,  that.actionsPlayed);
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), mainDeck, discardDeck, path, treasureChests, gemsInHand, playerInCave, nGemsOnPath, nHazardsOnPath);
     }
 
     /**
@@ -212,7 +175,7 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
         StringBuilder str_gemsOnTreasureChest = new StringBuilder();
         StringBuilder str_playersOnCave       = new StringBuilder();
 
-        for (Counter c:hands)          { str_gemsOnHand.         append(c.getValue()).append(" "); }
+        for (Counter c: gemsInHand)          { str_gemsOnHand.         append(c.getValue()).append(" "); }
         for (Counter c:treasureChests) { str_gemsOnTreasureChest.append(c.getValue()).append(" "); }
         for (Boolean b : playerInCave)
         {
@@ -221,17 +184,17 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
         }
 
         strings[0]  = "----------------------------------------------------";
-        strings[1]  = "Cave:                       " + nCave;
-        strings[2]  = "Players on Cave:            " + str_playersOnCave.toString();
+        strings[1]  = "Cave:                       " + ((DiamantTurnOrder)getTurnOrder()).caveCounter;
+        strings[2]  = "Players on Cave:            " + str_playersOnCave;
         strings[3]  = "Path:                       " + path.toString();
         strings[4]  = "Gems on Path:               " + nGemsOnPath;
-        strings[5]  = "Gems on hand:               " + str_gemsOnHand.toString();
-        strings[6]  = "Gems on treasure chest:     " + str_gemsOnTreasureChest.toString();
-        strings[7]  = "Hazard scorpions in Path:   " + nHazardScorpionsOnPath  + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Scorpions);
-        strings[8]  = "Hazard snakes in Path:      " + nHazardSnakesOnPath     + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Snakes);
-        strings[9]  = "Hazard rockfalls in Path:   " + nHazardRockfallsOnPath  + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Rockfalls);
-        strings[10] = "Hazard poisson gas in Path: " + nHazardPoissonGasOnPath + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.PoissonGas);
-        strings[11] = "Hazard explosions in Path:  " + nHazardExplosionsOnPath + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Explosions);
+        strings[5]  = "Gems on hand:               " + str_gemsOnHand;
+        strings[6]  = "Gems on treasure chest:     " + str_gemsOnTreasureChest;
+        strings[7]  = "Hazard scorpions in Path:   " + nHazardsOnPath.get(DiamantCard.HazardType.Scorpions).getValue()  + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Scorpions);
+        strings[8]  = "Hazard snakes in Path:      " + nHazardsOnPath.get(DiamantCard.HazardType.Snakes).getValue()     + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Snakes);
+        strings[9]  = "Hazard rockfalls in Path:   " + nHazardsOnPath.get(DiamantCard.HazardType.Rockfalls).getValue()  + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Rockfalls);
+        strings[10] = "Hazard poisson gas in Path: " + nHazardsOnPath.get(DiamantCard.HazardType.PoisonGas).getValue() + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.PoisonGas);
+        strings[11] = "Hazard explosions in Path:  " + nHazardsOnPath.get(DiamantCard.HazardType.Explosions).getValue() + ", in Main deck: " + getNHazardCardsInMainDeck(DiamantCard.HazardType.Explosions);
         strings[12] = "----------------------------------------------------";
 
         for (String s : strings){
@@ -252,8 +215,16 @@ public class DiamantGameState extends AbstractGameState implements IPrintable {
 
     public Deck<DiamantCard> getMainDeck()       { return mainDeck;       }
     public Deck<DiamantCard> getDiscardDeck()    { return discardDeck;    }
-    public List<Counter>     getHands()          { return hands;          }
+    public List<Counter>     getGemsInHand()     { return gemsInHand;     }
     public List<Counter>     getTreasureChests() { return treasureChests; }
     public Deck<DiamantCard> getPath()           { return path;           }
-    public ActionsPlayed     getActionsPlayed()  { return actionsPlayed;  }
+    public Counter getnGemsOnPath() {
+        return nGemsOnPath;
+    }
+    public HashMap<DiamantCard.HazardType, Counter> getnHazardsOnPath() {
+        return nHazardsOnPath;
+    }
+    public boolean isPlayerInCave(int player) {
+        return playerInCave.get(player);
+    }
 }

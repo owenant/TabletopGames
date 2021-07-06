@@ -12,6 +12,7 @@ import games.coltexpress.gui.ColtExpressGUI;
 import games.diamant.DiamantForwardModel;
 import games.diamant.DiamantGameState;
 import games.diamant.DiamantParameters;
+import games.diamant.gui.DiamantGUI;
 import games.dominion.gui.DominionGUI;
 import games.dotsboxes.DBForwardModel;
 import games.dotsboxes.DBGUI;
@@ -364,7 +365,9 @@ public enum GameType {
             case DominionSizeDistortion:
                 gui = new DominionGUI(game, ac, human);
                 break;
-            // TODO: Diamant GUI
+            case Diamant:
+                gui = new DiamantGUI(game, ac, human);
+                break;
         }
 
         return gui;

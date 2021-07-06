@@ -708,15 +708,16 @@ public class Game {
 //        players.add(new RandomPlayer());
 //        players.add(new MCTSPlayer());
 //        players.add(new MCTSPlayer(params1));
-        players.add(new OSLAPlayer());
 //        players.add(new RMHCPlayer());
-        players.add(new HumanGUIPlayer(ac));
+//        players.add(new HumanGUIPlayer(ac));
+        players.add(new OSLAPlayer());
+        players.add(new OSLAPlayer());
 //        players.add(new HumanConsolePlayer());
 //        players.add(new FirstActionPlayer());
 //        players.add(new HumanConsolePlayer());
 
         /* 4. Run! */
-        runOne(LoveLetter, players, seed, ac, false, null);
+        runOne(Diamant, players, seed, ac, false, null);
 
 //        ArrayList<GameType> games = new ArrayList<>(Arrays.asList(GameType.values()));
 //        games.remove(LoveLetter);

@@ -411,10 +411,10 @@ public abstract class AbstractGameState {
      * @return All actions that have been executed on this state since reset()/initialisation
      */
     public List<AbstractAction> getHistory() {
-        return new ArrayList<>(history);
+        return history;
     }
     public List<String> getHistoryAsText() {
-        return new ArrayList<>(historyText);
+        return historyText;
     }
 
     void setGameID(int id) {gameID = id;} // package level deliberately
