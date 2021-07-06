@@ -1,11 +1,8 @@
 package games.diamant.gui;
 
-import core.components.Card;
 import core.components.Deck;
 import games.diamant.cards.DiamantCard;
-import gui.views.CardView;
 import gui.views.DeckView;
-import org.davidmoten.text.utils.WordWrap;
 import utilities.ImageIO;
 
 import java.awt.*;

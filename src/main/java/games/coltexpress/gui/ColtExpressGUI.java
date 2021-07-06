@@ -21,8 +21,7 @@ import java.awt.*;
 import java.util.Collection;
 import java.util.List;
 
-import static core.CoreConstants.ALWAYS_DISPLAY_CURRENT_PLAYER;
-import static core.CoreConstants.ALWAYS_DISPLAY_FULL_OBSERVABLE;
+import static core.CoreConstants.*;
 import static games.coltexpress.ColtExpressGameState.ColtExpressGamePhase.ExecuteActions;
 
 public class ColtExpressGUI extends AbstractGUI {
@@ -225,7 +224,7 @@ public class ColtExpressGUI extends AbstractGUI {
             if (gameState.getCurrentPlayer() != activePlayer) {
                 activePlayer = gameState.getCurrentPlayer();
             }
-            if (currentGamePhase == null || currentGamePhase != gameState.getGamePhase()) {
+            if (PAUSE_GUI_KEY_MOMENTS && (currentGamePhase == null || currentGamePhase != gameState.getGamePhase())) {
                 if (gameState.getGamePhase() == ExecuteActions) {
                     JOptionPane.showMessageDialog(this, "Planning phase over, execute actions!");
                 } else {

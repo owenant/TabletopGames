@@ -25,8 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import static core.CoreConstants.ALWAYS_DISPLAY_CURRENT_PLAYER;
-import static core.CoreConstants.ALWAYS_DISPLAY_FULL_OBSERVABLE;
+import static core.CoreConstants.*;
 
 public class PokerGUI extends AbstractGUI {
     // Settings for display areas
@@ -278,7 +277,7 @@ public class PokerGUI extends AbstractGUI {
     @Override
     protected void _update(AbstractPlayer player, AbstractGameState gameState) {
         if (gameState != null) {
-            if (pgs.getTurnOrder().getRoundCounter() != gameState.getTurnOrder().getRoundCounter()) {
+            if (PAUSE_GUI_KEY_MOMENTS && pgs.getTurnOrder().getRoundCounter() != gameState.getTurnOrder().getRoundCounter()) {
                 // New round
                 // Paint final state of previous round, showing all hands
                 for (int i = 0; i < pgs.getNPlayers(); i++) {

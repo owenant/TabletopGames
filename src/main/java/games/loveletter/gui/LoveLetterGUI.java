@@ -28,8 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import static core.CoreConstants.ALWAYS_DISPLAY_CURRENT_PLAYER;
-import static core.CoreConstants.ALWAYS_DISPLAY_FULL_OBSERVABLE;
+import static core.CoreConstants.*;
 
 public class LoveLetterGUI extends AbstractGUI {
     // Settings for display areas
@@ -308,7 +307,7 @@ public class LoveLetterGUI extends AbstractGUI {
     protected void _update(AbstractPlayer player, AbstractGameState gameState) {
         if (gameState != null) {
             // Pause after round finished, full display
-            if (llgs.getTurnOrder().getRoundCounter() != gameState.getTurnOrder().getRoundCounter()) {
+            if (PAUSE_GUI_KEY_MOMENTS && llgs.getTurnOrder().getRoundCounter() != gameState.getTurnOrder().getRoundCounter()) {
                 // New round
                 // Paint final state of previous round, showing all hands
 

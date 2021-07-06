@@ -12,6 +12,7 @@ import gui.ScaledImage;
 import players.human.ActionController;
 import players.human.HumanGUIPlayer;
 import utilities.ImageIO;
+import utilities.Utils;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Collection;
 import java.util.stream.IntStream;
 
+import static core.CoreConstants.PAUSE_GUI_KEY_MOMENTS;
 import static java.util.stream.Collectors.joining;
 
 public class DiamantGUI extends AbstractGUI {
@@ -40,6 +42,7 @@ public class DiamantGUI extends AbstractGUI {
     // Draw path view
     DiamantDeckView path;
     JLabel nGemsOnPath;
+    JLabel nCave;
 
     // ID of human player
     int humanID;
@@ -175,6 +178,8 @@ public class DiamantGUI extends AbstractGUI {
         gameInfo.setLayout(new BoxLayout(gameInfo, BoxLayout.Y_AXIS));
         gameInfo.add(new JLabel("<html><h1>" + gameTitle + "</h1></html>"));
 
+        nCave = new JLabel("Cave: 0 / " + ((DiamantParameters)gameState.getGameParameters()).nCaves);
+
         updateGameStateInfo(gameState);
 
         gameInfo.add(gameStatus);
@@ -182,7 +187,8 @@ public class DiamantGUI extends AbstractGUI {
         gameInfo.add(gamePhase);
         gameInfo.add(turnOwner);
         gameInfo.add(turn);
-        gameInfo.add(currentPlayer);  // todo cave
+        gameInfo.add(currentPlayer);
+        gameInfo.add(nCave);
 
         gameInfo.setPreferredSize(new Dimension(width/2 - 10, height));
 
@@ -220,6 +226,7 @@ public class DiamantGUI extends AbstractGUI {
         turn.setText("Turn: " + gameState.getTurnOrder().getTurnCounter() +
                 "; Round: " + gameState.getTurnOrder().getRoundCounter());
         currentPlayer.setText("Current player: " + gameState.getTurnOrder().getCurrentPlayer(gameState));
+        nCave.setText("Cave: " + ((DiamantTurnOrder)gameState.getTurnOrder()).getCaveCounter() + " / " + ((DiamantParameters)gameState.getGameParameters()).nCaves);
     }
 
     @Override
@@ -256,7 +263,8 @@ public class DiamantGUI extends AbstractGUI {
         if (gameState != null) {
 
             // Execute last action in the previous game state without any end of round computations to get final state
-            if (gameState.getHistory().size() > 0 && gameState.getHistory().size() > dgs.getHistory().size()) {
+            if (PAUSE_GUI_KEY_MOMENTS && (gameState.getGameStatus() == Utils.GameResult.GAME_END ||
+                    gameState.getHistory().size() > 0 && gameState.getHistory().size() > dgs.getHistory().size())) {
                 gameState.getHistory().get(gameState.getHistory().size() - 1).execute(dgs);
                 DiamantTurnOrder to = (DiamantTurnOrder) dgs.getTurnOrder();
                 // Pause after round finished, full display
@@ -279,7 +287,11 @@ public class DiamantGUI extends AbstractGUI {
                     repaint();
 
                     // Message for pause and clarity
-                    JOptionPane.showMessageDialog(this, "All decisions finished!");
+                    if (gameState.getGameStatus() == Utils.GameResult.GAME_END) {
+                        JOptionPane.showMessageDialog(this, "GAME OVER! Winners: " + fm.getWinners((DiamantGameState) gameState).toString());
+                    } else {
+                        JOptionPane.showMessageDialog(this, "All decisions finished!");
+                    }
                 }
             }
             

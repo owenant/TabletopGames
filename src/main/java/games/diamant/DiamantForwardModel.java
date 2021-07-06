@@ -195,15 +195,9 @@ public class DiamantForwardModel extends AbstractForwardModel {
         }
     }
 
-    /**
-     * Finishes the game and obtains who is the winner
-     * @param dgs: current game state
-     */
-    private void calculateEndGame(DiamantGameState dgs)
-    {
+    public HashSet<Integer> getWinners(DiamantGameState dgs) {
         int maxGems = 0;
-        List<Integer> bestPlayers = new ArrayList<>();
-
+        HashSet<Integer> bestPlayers = new HashSet<>();
         for (int p=0; p < dgs.getNPlayers(); p++)
         {
             int nGems = dgs.treasureChests.get(p).getValue();
@@ -218,7 +212,16 @@ public class DiamantForwardModel extends AbstractForwardModel {
                 bestPlayers.add(p);
             }
         }
+        return bestPlayers;
+    }
 
+    /**
+     * Finishes the game and obtains who is the winner
+     * @param dgs: current game state
+     */
+    private void calculateEndGame(DiamantGameState dgs)
+    {
+        HashSet<Integer> bestPlayers = getWinners(dgs);
         boolean moreThanOneWinner = bestPlayers.size() > 1;
 
         for (int p=0; p < dgs.getNPlayers(); p++)
