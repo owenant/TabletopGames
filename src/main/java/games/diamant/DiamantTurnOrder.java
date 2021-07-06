@@ -13,7 +13,7 @@ public class DiamantTurnOrder extends SimultaneousTurnOrder {
 
     public DiamantTurnOrder(int nPlayers, int maxCaves) {
         super(nPlayers);
-        caveCounter = 0;
+        caveCounter = 1;
         this.maxCaves = maxCaves;
     }
 
