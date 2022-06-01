@@ -5,6 +5,7 @@ import core.actions.AbstractAction;
 import core.components.Component;
 import core.interfaces.IExtendedSequence;
 import games.descent2e.DescentGameState;
+import games.descent2e.DescentTypes;
 import games.descent2e.actions.Triggers;
 import games.descent2e.components.Figure;
 import games.descent2e.components.Hero;
@@ -177,6 +178,15 @@ public class MeleeAttack extends AbstractAction implements IExtendedSequence {
         Figure defender = (Figure) state.getComponentById(defendingFigure);
         int startingHealth = defender.getAttribute(Figure.Attribute.Health).getValue();
         defender.setAttribute(Figure.Attribute.Health, Math.max(startingHealth - damage, 0));
+        if (defender.getAttribute(Figure.Attribute.Health).getValue() == 0){
+            if (defender instanceof Monster) {
+                System.out.println("defender died " + defender.getOwnerId());
+//            state.getComponentById(defender). // todo remove from board and set it to inactive
+            } else if (defender instanceof Hero){
+                defender.addCondition(DescentTypes.DescentCondition.Defeated);
+            }
+        }
+
     }
 
     protected boolean attackMissed(DescentGameState state) {
@@ -217,7 +227,7 @@ public class MeleeAttack extends AbstractAction implements IExtendedSequence {
 
     @Override
     public String toString() {
-        return String.format("Melee Attack (Wpn: %d on %d", attackingPlayer, attackingFigure);
+        return String.format("Melee Attack (Attacker: %d with %d, defender %d with %d)", attackingPlayer, attackingFigure, defendingPlayer, defendingFigure);
     }
 
     @Override

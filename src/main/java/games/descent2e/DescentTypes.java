@@ -117,6 +117,7 @@ public class DescentTypes {
         Poison,
         Stun,
         Disease,
+        Defeated,
 //        Bleed,
 //        Burn,
 //        Curse,
