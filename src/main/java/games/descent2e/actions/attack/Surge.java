@@ -14,8 +14,7 @@ public enum Surge {
     PIERCE_2(1, (a, s) -> a.addPierce(2)),
     STUN(1, (a, s) -> a.setStunning(true)), // TODO: This doesn't yet have any actual effect
     RUNIC_KNOWLEDGE(1, (a, s) -> {
-        int fatigue = s.getActingFigure().getAttribute(Figure.Attribute.Fatigue).getValue();
-        s.getActingFigure().setAttribute(Figure.Attribute.Fatigue, fatigue + 1);
+        s.getActingFigure().changeFatigue(1);
         a.addDamage(2);
     });
 

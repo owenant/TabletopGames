@@ -173,6 +173,11 @@ public class Figure extends Token {
 
     public DicePool getDefenceDice() {return defenceDice;}
 
+    public void changeFatigue(int delta) {
+        int fatigue = getAttribute(Figure.Attribute.Fatigue).getValue();
+        setAttribute(Figure.Attribute.Fatigue, fatigue + delta);
+    }
+
     @Override
     public Figure copy() {
         Figure copy = new Figure(componentName, nActionsExecuted.copy(), componentID);

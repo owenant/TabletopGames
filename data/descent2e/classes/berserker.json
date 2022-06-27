@@ -9,7 +9,8 @@
         "XP": ["Integer", 0],
         "fatigue": ["Integer", 1],
         "exhaust": ["Boolean", false],
-        "action": ["String", "Perform an attack with a Melee weapon. This attack gains +1 damage."]
+        "action": ["String", "Perform an attack with a Melee weapon. This attack gains +1 damage."],
+        "actionClass" : ["String", "Rage"]
       },
       {
         "name": ["String","Chipped Greataxe"],

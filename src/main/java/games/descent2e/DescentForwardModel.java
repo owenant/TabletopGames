@@ -106,7 +106,7 @@ public class DescentForwardModel extends AbstractForwardModel {
                     figure.equip(c);
                 }
             }
-            // after equipping, set up abilities
+            // after equipping, set up abilities from weapon Surges
             figure.getWeapons().stream().flatMap(w -> w.getWeaponSurges().stream())
                     .forEach(s -> figure.addAbility(new SurgeAttackAction(s, figure.getComponentID())));
 
@@ -519,20 +519,15 @@ public class DescentForwardModel extends AbstractForwardModel {
         Vector2D currentLocation = f.getPosition();
         BoardNode currentTile = dgs.masterBoard.getElement(currentLocation.getX(), currentLocation.getY());
         // Find valid neighbours in master graph - used for melee attacks
-        for (int neighbourCompID : currentTile.getNeighbours().keySet()) {
-            BoardNode neighbour = (BoardNode) dgs.getComponentById(neighbourCompID);
-            if (neighbour == null) continue;
-            Vector2D loc = ((PropertyVector2D) neighbour.getProperty(coordinateHash)).values;
-            int neighbourID = ((PropertyInt)neighbour.getProperty(playersHash)).value;
-            if ( neighbourID != -1 ) {
-                Figure other = (Figure)dgs.getComponentById(neighbourID);
-                if (f instanceof Monster && other instanceof Hero) {
-                    // Monster attacks a hero
-                    actions.add(new MeleeAttack(f.getComponentID(), other.getComponentID()));
-                } else if (f instanceof Hero && other instanceof Monster) {
-                    // Player attacks a monster
-                    actions.add(new MeleeAttack(f.getComponentID(), other.getComponentID()));
-                }
+
+        List<Figure> neighbours = dgs.getAdjacentFigures(currentTile);
+        for (Figure n : neighbours) {
+            if (f instanceof Monster && n instanceof Hero) {
+                // Monster attacks a hero
+                actions.add(new MeleeAttack(f.getComponentID(), n.getComponentID()));
+            } else if (f instanceof Hero && n instanceof Monster) {
+                // Player attacks a monster
+                actions.add(new MeleeAttack(f.getComponentID(), n.getComponentID()));
             }
         }
 

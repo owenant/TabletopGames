@@ -9,8 +9,11 @@ import core.actions.DoNothing;
 import core.components.*;
 import core.interfaces.IGamePhase;
 import core.interfaces.IPrintable;
+import core.properties.PropertyInt;
+import core.properties.PropertyVector2D;
 import games.GameType;
 import games.descent2e.actions.DescentAction;
+import games.descent2e.actions.attack.MeleeAttack;
 import games.descent2e.components.*;
 import games.descent2e.components.tokens.DToken;
 import games.descent2e.actions.Triggers;
@@ -18,6 +21,9 @@ import utilities.Vector2D;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static core.CoreConstants.coordinateHash;
+import static core.CoreConstants.playersHash;
 
 public class DescentGameState extends AbstractGameState implements IPrintable {
 
@@ -200,6 +206,21 @@ public class DescentGameState extends AbstractGameState implements IPrintable {
 
     public List<List<Monster>> getMonsters() {
         return monsters;
+    }
+
+    public List<Figure> getAdjacentFigures(BoardNode currentTile) {
+        List<Figure> retValue = new ArrayList<>();
+        for (int neighbourCompID : currentTile.getNeighbours().keySet()) {
+            BoardNode neighbour = (BoardNode) getComponentById(neighbourCompID);
+            if (neighbour == null) continue;
+            Vector2D loc = ((PropertyVector2D) neighbour.getProperty(coordinateHash)).values;
+            int neighbourID = ((PropertyInt)neighbour.getProperty(playersHash)).value;
+            if ( neighbourID != -1 ) {
+                Figure other = (Figure) getComponentById(neighbourID);
+                retValue.add(other);
+            }
+        }
+        return retValue;
     }
 
     public Deck<Card> getSearchCards() {

@@ -3,9 +3,6 @@ package games.descent2e.components;
 import core.CoreConstants;
 import core.components.Component;
 import core.interfaces.IComponentContainer;
-import core.properties.PropertyStringArray;
-import games.descent2e.DescentGameData;
-import games.descent2e.DescentGameState;
 import utilities.Utils;
 
 import java.util.*;

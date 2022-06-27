@@ -11,6 +11,8 @@ import games.descent2e.actions.Triggers;
 import games.descent2e.components.*;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static games.descent2e.actions.Triggers.*;
 import static games.descent2e.actions.attack.MeleeAttack.AttackPhase.*;
@@ -56,6 +58,7 @@ public class MeleeAttack extends AbstractAction implements IExtendedSequence {
     int interruptPlayer;
     int surgesToSpend;
     int extraRange, pierce, extraDamage;
+    BiConsumer<MeleeAttack, DescentGameState> specialSauce;
     boolean isStunning; // TODO: This doesn't actually stun the target (making them lose their next go) yet
 
     Set<Surge> surgesUsed = new HashSet<>();
@@ -69,6 +72,8 @@ public class MeleeAttack extends AbstractAction implements IExtendedSequence {
     public boolean execute(AbstractGameState gs) {
         gs.setActionInProgress(this);
         DescentGameState state = (DescentGameState) gs;
+        if (specialSauce != null)  // do special stuff
+            specialSauce.accept(this, state);
         attackingPlayer = state.getComponentById(attackingFigure).getOwnerId();
         defendingPlayer = state.getComponentById(defendingFigure).getOwnerId();
 
