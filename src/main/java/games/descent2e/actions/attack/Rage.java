@@ -5,6 +5,8 @@ import core.actions.AbstractAction;
 import core.components.BoardNode;
 import core.interfaces.IExtendedSequence;
 import games.descent2e.DescentGameState;
+import games.descent2e.actions.DescentAction;
+import games.descent2e.actions.Triggers;
 import games.descent2e.components.Figure;
 import games.descent2e.components.Monster;
 import utilities.Vector2D;
@@ -13,22 +15,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Rage extends AbstractAction implements IExtendedSequence {
+public class Rage extends DescentAction implements IExtendedSequence {
 
     boolean targetChosen;
     final int actingfigureId;
     final int playerId;
 
     public Rage(int playerId, int actingFigureId) {
+        super(Triggers.ACTION_POINT_SPEND);
         this.actingfigureId = actingFigureId;
         this.playerId = playerId;
     }
 
     @Override
-    public boolean execute(AbstractGameState gs) {
+    public boolean execute(DescentGameState gs) {
         gs.setActionInProgress(this);
         return true;
     }
+
 
     @Override
     public boolean equals(Object other) {
@@ -102,5 +106,10 @@ public class Rage extends AbstractAction implements IExtendedSequence {
         Rage retValue = new Rage(playerId, actingfigureId);
         retValue.targetChosen = targetChosen;
         return retValue;
+    }
+
+    @Override
+    public boolean canExecute(DescentGameState dgs) {
+        return true;
     }
 }

@@ -53,7 +53,7 @@ public class Figure extends Token {
         }
     }
 
-    HashMap<Attribute, Counter> attributes;
+    Map<Attribute, Counter> attributes;
     Counter nActionsExecuted;
 
     // For big monsters, this is the anchor point. Their size and orientation can be used to find all spaces occupied by the figure

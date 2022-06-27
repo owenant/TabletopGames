@@ -4,7 +4,6 @@ import core.components.Card;
 import core.properties.Property;
 import core.properties.PropertyStringArray;
 import games.descent2e.DescentConstants.AttackType;
-import games.descent2e.DescentGameState;
 import games.descent2e.actions.attack.Surge;
 
 import java.util.*;

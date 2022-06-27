@@ -110,6 +110,7 @@ public class DescentForwardModel extends AbstractForwardModel {
             figure.getWeapons().stream().flatMap(w -> w.getWeaponSurges().stream())
                     .forEach(s -> figure.addAbility(new SurgeAttackAction(s, figure.getComponentID())));
 
+
             // Place hero on the board in random starting position out of those available
             choice = rnd.nextInt(heroStartingPositions.size());
             Vector2D position = heroStartingPositions.get(choice);
