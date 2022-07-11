@@ -36,6 +36,7 @@ public class Figure extends Token {
         Willpower,
         Knowledge,
         Awareness;
+
         public boolean isSecondary() {
             switch (this) {
                 case MovePoints:
@@ -60,18 +61,20 @@ public class Figure extends Token {
     // Note: size remains constant and never changes. For finding spaces when orientation % 2 == 1 for medium monsters,
     // size dimensions should be swapped (in a copy of the pair to leave this the same).
     Vector2D position;
-    Pair<Integer,Integer> size;
+    Pair<Integer, Integer> size;
 
     Set<DescentTypes.DescentCondition> conditions;  // TODO: clear every quest + when figure exhausted?
     List<DescentAction> abilities;  // TODO track exhausted etc.
+    List<Skill> skills;
 
     public Figure(String name, int nActionsPossible) {
         super(name);
-        size = new Pair<>(1,1);
+        size = new Pair<>(1, 1);
         conditions = new HashSet<>();
         attributes = new HashMap<>();
         attributes.put(XP, new Counter(0, 0, -1, "XP"));
         abilities = new ArrayList<>();
+        skills = new ArrayList<>();
         nActionsExecuted = new Counter(0, 0, nActionsPossible, "Actions executed");
     }
 
@@ -161,17 +164,33 @@ public class Figure extends Token {
     }
 
     public void addAbility(DescentAction ability) {
-        this.abilities.add(ability);
+        if (ability != null)
+            this.abilities.add(ability);
     }
+
     public void removeAbility(DescentAction ability) {
         this.abilities.remove(ability);
     }
+
     public List<DescentAction> getAbilities() {
         return abilities;
     }
-    public DicePool getAttackDice() { return attackDice;}
 
-    public DicePool getDefenceDice() {return defenceDice;}
+    public void addSkill(Skill skill) {
+        skills.add(skill);
+    }
+
+    public List<Skill> getSkills() {
+        return skills;
+    }
+
+    public DicePool getAttackDice() {
+        return attackDice;
+    }
+
+    public DicePool getDefenceDice() {
+        return defenceDice;
+    }
 
     public void changeFatigue(int delta) {
         int fatigue = getAttribute(Figure.Attribute.Fatigue).getValue();

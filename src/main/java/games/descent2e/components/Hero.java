@@ -23,7 +23,7 @@ import static games.descent2e.DescentConstants.*;
 // TODO: figure out how to do ability/heroic-feat
 public class Hero extends Figure {
 
-    Deck<Card> skills;
+    Deck<Card> skillDeck;
     Deck<Card> handEquipment;
     Card armor;
     Deck<Card> otherEquipment;
@@ -40,10 +40,12 @@ public class Hero extends Figure {
     public Hero(String name, int nActionsPossible) {
         super(name, nActionsPossible);
 
-        skills = new Deck<>("Skills", CoreConstants.VisibilityMode.VISIBLE_TO_ALL);
+        skillDeck = new Deck<>("Skills", CoreConstants.VisibilityMode.VISIBLE_TO_ALL);
         handEquipment = new Deck<>("Hands", CoreConstants.VisibilityMode.VISIBLE_TO_ALL);
         otherEquipment = new Deck<>("OtherItems", CoreConstants.VisibilityMode.VISIBLE_TO_ALL);
         items = new ArrayList<>();
+        skills = new ArrayList<>();
+        // TODO: Review with Raluca this split between Deck<Card> and List<Skill> (similarly for items)
 
         equipSlotsAvailable = new HashMap<>();
         equipSlotsAvailable.put("hand", 2);
@@ -64,12 +66,12 @@ public class Hero extends Figure {
         super(name, actions, ID);
     }
 
-    public Deck<Card> getSkills() {
-        return skills;
+    public Deck<Card> getSkillDeck() {
+        return skillDeck;
     }
 
-    public void setSkills(Deck<Card> skills) {
-        this.skills = skills;
+    public void setSkillDeck(Deck<Card> skillDeck) {
+        this.skillDeck = skillDeck;
     }
 
     public Deck<Card> getHandEquipment() {
@@ -171,7 +173,8 @@ public class Hero extends Figure {
             return false;
         } else {
             // A skill
-            skills.add(c);
+            skillDeck.add(c);
+            addSkill(new Skill(c));
             return true;
         }
     }
@@ -195,7 +198,7 @@ public class Hero extends Figure {
         if (!super.equals(o)) return false;
         Hero hero = (Hero) o;
         return featAvailable == hero.featAvailable && rested == hero.rested &&
-                Objects.equals(skills, hero.skills) && Objects.equals(handEquipment, hero.handEquipment)
+                Objects.equals(skillDeck, hero.skillDeck) && Objects.equals(handEquipment, hero.handEquipment)
                 && Objects.equals(armor, hero.armor) && Objects.equals(otherEquipment, hero.otherEquipment)
                 && Objects.equals(equipSlotsAvailable, hero.equipSlotsAvailable) &&
                 Objects.equals(heroicFeat, hero.heroicFeat) &&
@@ -204,7 +207,7 @@ public class Hero extends Figure {
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(super.hashCode(), skills, handEquipment, armor, otherEquipment,
+        int result = Objects.hash(super.hashCode(), skillDeck, handEquipment, armor, otherEquipment,
                 equipSlotsAvailable, heroicFeat, featAvailable, rested, ability);
         result = 31 * result;
         return result;
@@ -226,7 +229,7 @@ public class Hero extends Figure {
     private Hero copyTo(Hero copy) {
         copy.equipSlotsAvailable = new HashMap<>();
         copy.equipSlotsAvailable.putAll(equipSlotsAvailable);
-        copy.skills = skills.copy();
+        copy.skillDeck = skillDeck.copy();
         copy.handEquipment = handEquipment.copy();
         copy.otherEquipment = otherEquipment.copy();
         if (armor != null) {

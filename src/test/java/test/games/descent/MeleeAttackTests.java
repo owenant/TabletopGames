@@ -1,18 +1,11 @@
 package test.games.descent;
 
-import core.Game;
-import core.actions.AbstractAction;
-import core.actions.DoNothing;
-import games.descent2e.DescentConstants;
-import games.descent2e.DescentForwardModel;
-import games.descent2e.DescentGameState;
-import games.descent2e.DescentParameters;
-import games.descent2e.actions.DescentAction;
-import games.descent2e.actions.Triggers;
+import core.actions.*;
+import games.descent2e.*;
+import games.descent2e.actions.*;
 import games.descent2e.actions.attack.*;
 import games.descent2e.components.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import utilities.Vector2D;
 
 import java.util.List;
@@ -31,9 +24,9 @@ public class MeleeAttackTests {
             seed += 1001;
             state = new DescentGameState(new DescentParameters(seed), 2);
             fm.setup(state);
-     //       System.out.println("Class: "  + state.getHeroes().get(0).getProperty("class"));
+            //       System.out.println("Class: "  + state.getHeroes().get(0).getProperty("class"));
         } while (state.getHeroes().get(0).getAbilities().stream()
-                .noneMatch(a -> a instanceof SurgeAttackAction && ((SurgeAttackAction)a).surge == Surge.STUN));
+                .noneMatch(a -> a instanceof SurgeAttackAction && ((SurgeAttackAction) a).surge == Surge.STUN));
     }
 
     @Test
@@ -45,7 +38,7 @@ public class MeleeAttackTests {
     public void attackRollsDoesDamage() {
         Figure actingFigure = state.getActingFigure();
         Figure victim = state.getMonsters().get(0).get(0);
-        List<Item> weapons = ((Hero)actingFigure).getWeapons();
+        List<Item> weapons = ((Hero) actingFigure).getWeapons();
 
         assertEquals(1, weapons.size());
 
@@ -132,7 +125,7 @@ public class MeleeAttackTests {
         for (int loop = 0; loop < 100; loop++) {
             MeleeAttack attack = new RangedAttack(actingFigure.getComponentID(), victim.getComponentID());
             attack.execute(state);
-    //        System.out.println(state.getAttackDicePool().toString());
+            //        System.out.println(state.getAttackDicePool().toString());
             assertTrue(state.getAttackDicePool().hasRolled());
             if (attack.attackMissed(state)) {
                 missed++;

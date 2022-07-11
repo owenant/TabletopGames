@@ -109,7 +109,10 @@ public class DescentForwardModel extends AbstractForwardModel {
             // after equipping, set up abilities from weapon Surges
             figure.getWeapons().stream().flatMap(w -> w.getWeaponSurges().stream())
                     .forEach(s -> figure.addAbility(new SurgeAttackAction(s, figure.getComponentID())));
-
+            for (Skill skill : figure.getSkills()) {
+                DescentAction action = skill.getAction(i, figure.getComponentID());
+                figure.addAbility(action);
+            }
 
             // Place hero on the board in random starting position out of those available
             choice = rnd.nextInt(heroStartingPositions.size());
