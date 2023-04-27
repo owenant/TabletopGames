@@ -39,6 +39,7 @@ import games.uno.gui.*;
 import games.virus.*;
 import games.dicemonastery.*;
 import games.dominion.*;
+import games.battlecards.*;
 import gametemplate.GTForwardModel;
 import gametemplate.GTGUIManager;
 import gametemplate.GTGameState;
@@ -164,8 +165,11 @@ public enum GameType {
     CantStop(2, 4,
             Arrays.asList(Dice, Abstract),
             Collections.singletonList(PushYourLuck),
-            CantStopGameState.class, CantStopForwardModel.class, CantStopParameters.class, CantStopGUIManager.class);
-
+            CantStopGameState.class, CantStopForwardModel.class, CantStopParameters.class, CantStopGUIManager.class),
+    BattleCards(2, 4,
+            Arrays.asList(Strategy, Cards),
+            Arrays.asList(DeckManagement, SimultaneousActionSelection, TakeThat),
+            BattleCardsGameState.class, BattleCardsForwardModel.class, BattleCardsParameters.class, BattleCardsGUIManager.class);
     // Core classes where the game is defined
     final Class<? extends AbstractGameState> gameStateClass;
     final Class<? extends AbstractForwardModel> forwardModelClass;
