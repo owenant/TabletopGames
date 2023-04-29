@@ -28,6 +28,7 @@ public class BattleCardsParameters extends AbstractParameters {
     public int NO_CARDS_DRAWN_FROM_CONSTRUCTION_DECK = 5;
     public int NO_CARDS_KEPT_FROM_CONSTRUCTION_DECK_DRAW = 2;
     public int MAX_HEALTH = 10;
+    public int MAX_STAMINA = 10;
     public int NO_PTS_FOR_KO = 2;
     public int NO_PTS_FOR_HAVING_MOST_HEALTH_AT_ROUND_END = 2;
     public int NO_PTS_TO_WIN = 16;

@@ -52,7 +52,8 @@ public class BattleCardsGameState extends AbstractGameState {
     Integer[] playerTarget;
     public enum BattleCardsGamePhase implements IGamePhase {
         Play,
-        Resolve
+        Resolve,
+        Construct
     }
     Random rnd;
 
