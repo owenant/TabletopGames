@@ -4,15 +4,20 @@ import static java.util.stream.Collectors.toList;
 
 import core.AbstractGameState;
 import core.AbstractParameters;
+import core.CoreConstants;
 import core.components.Component;
 import core.components.Counter;
 import core.components.Deck;
+import core.interfaces.IGamePhase;
 import games.GameType;
 import games.battlecards.cards.BattleCardsBasicCard;
+import games.loveletter.LoveLetterGameState;
+import games.loveletter.cards.LoveLetterCard;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -32,10 +37,8 @@ public class BattleCardsGameState extends AbstractGameState {
 
     // List of cards in player hands
     List<Deck<BattleCardsBasicCard>> playerHandCards;
-
     // Discarded cards for each player
     List<Deck<BattleCardsBasicCard>> playerDiscardCards;
-
     // Cards in draw pile for each player
     List<Deck<BattleCardsBasicCard>> playerDrawPile;
     // Cards in central draw pile for deck building between turns
@@ -47,6 +50,10 @@ public class BattleCardsGameState extends AbstractGameState {
     Counter[] playerStamina;
     //stores for each player who they are targeting
     Integer[] playerTarget;
+    public enum BattleCardsGamePhase implements IGamePhase {
+        Play,
+        Resolve
+    }
     Random rnd;
 
     public BattleCardsGameState(AbstractParameters gameParameters, int nPlayers) {
@@ -203,8 +210,7 @@ public class BattleCardsGameState extends AbstractGameState {
     @Override
     protected double _getHeuristicScore(int playerId) {
         if (isNotTerminal()) {
-            // TODO calculate an approximate value
-            return 0;
+            return playerScore[playerId].getValue()/params.NO_PTS_TO_WIN;
         } else {
             // The game finished, we can instead return the actual result of the game for the given player.
             return getPlayerResults()[playerId].value;
@@ -217,19 +223,80 @@ public class BattleCardsGameState extends AbstractGameState {
      */
     @Override
     public double getGameScore(int playerId) {
-        // TODO: What is this player's score (if any)?
-        return 0;
+        //What is this player's score (if any)?
+        return playerScore[playerId].getValue();
     }
 
     @Override
     protected boolean _equals(Object o) {
-        // TODO: compare all variables in the state
-        return o instanceof BattleCardsGameState;
+        //compare all variables in the state
+        if (this == o) return true;
+        if (!(o instanceof BattleCardsGameState)) return false;
+        if (!super.equals(o)) return false;
+        BattleCardsGameState that = (BattleCardsGameState) o;
+        return Objects.equals(playerHandCards, that.playerHandCards) &&
+            Objects.equals(playerDiscardCards, that.playerDiscardCards) &&
+            Objects.equals(playerDrawPile, that.playerDrawPile) &&
+            Objects.equals(deckConstructionPile, that.deckConstructionPile) &&
+            Objects.equals(playedCards, that.playedCards) &&
+            Objects.equals(playerScore, that.playerScore) &&
+            Objects.equals(playerHealth, that.playerHealth) &&
+            Objects.equals(playerStamina, that.playerStamina) &&
+            Arrays.equals(playerTarget, that.playerTarget);
     }
 
     @Override
     public int hashCode() {
-        // TODO: include the hash code of all variables
-        return super.hashCode();
+        //include the hash code of all variables. Copied and adapted from loveletters code
+        int result = Objects.hash(super.hashCode(), playerHandCards, playerDiscardCards, playerDrawPile,
+            deckConstructionPile, playedCards, playerScore, playerHealth, playerStamina);
+        //TODO: why 31 here?
+        result = 31 * result + Arrays.hashCode(playerTarget);
+        return result;
+    }
+
+    /**
+     * Sets this player as KO'd and updates game and player status
+     * @param attackingPlayer - ID of player doing the attack
+     * @param targetPlayer - ID of player KOd
+     */
+    public void playerKO(int attackingPlayer, int targetPlayer){
+        // a losing player needs to discard all cards
+        while (playerHandCards.get(targetPlayer).getSize() > 0)
+            playerDiscardCards.get(targetPlayer).add(playerHandCards.get(targetPlayer).draw());
+
+        logEvent("KO'd player: " + attackingPlayer + "," + targetPlayer);
+    }
+
+    /**
+     * Prints the game state.
+     */
+    public void printToConsole() {
+        System.out.println("======================");
+        System.out.println("BattleCards Game-State");
+        System.out.println("----------------------");
+
+        for (int i = 0; i < getNPlayers(); i++){
+            if (getCurrentPlayer() == i)
+                System.out.print(">>> Player " + i + ":");
+            else
+                System.out.print("Player " + i + ": ");
+            System.out.print(playerHandCards.get(i));
+            System.out.print(";\t Discarded: ");
+            System.out.print(playerDiscardCards.get(i));
+            System.out.print(";\t Draw pile: ");
+            System.out.print(playerDrawPile.get(i));
+
+            System.out.print(";\t Health: ");
+            System.out.print(playerHealth[i].getValue());
+            System.out.print(";\t Stamina: ");
+            System.out.print(playerStamina[i].getValue());
+            System.out.print(";\t Score: ");
+            System.out.println(playerScore[i].getValue());
+        }
+        System.out.println("\nDeck Construction Pile" + ":" + deckConstructionPile.toString());
+
+        System.out.println("Current GamePhase: " + gamePhase);
+        System.out.println("======================");
     }
 }
