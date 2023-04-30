@@ -59,6 +59,7 @@ public class BattleCardsGameState extends AbstractGameState {
 
     public BattleCardsGameState(AbstractParameters gameParameters, int nPlayers) {
         super(gameParameters, nPlayers);
+        rnd = new Random(gameParameters.getRandomSeed());
         params = (BattleCardsParameters) gameParameters;
     }
 

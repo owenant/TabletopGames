@@ -33,13 +33,22 @@ public class BattleCardsParameters extends AbstractParameters {
     public int NO_PTS_FOR_HAVING_MOST_HEALTH_AT_ROUND_END = 2;
     public int NO_PTS_TO_WIN = 16;
 
-    // Occurrence count for each card
-    public HashMap<BattleCardsBasicCard.CardType, Integer> basicCardCounts = new HashMap<BattleCardsBasicCard.CardType, Integer>() {{
+    // Occurrence counts for each card in the initial construction deck pile
+    public HashMap<BattleCardsBasicCard.CardType, Integer> initialCardCountsForConstructionPile = new HashMap<BattleCardsBasicCard.CardType, Integer>() {{
         put(BattleCardsBasicCard.CardType.LightAttack, 10);
         put(BattleCardsBasicCard.CardType.MediumAttack, 10);
         put(BattleCardsBasicCard.CardType.StrongAttack, 10);
         put(BattleCardsBasicCard.CardType.Bulldoze, 10);
         put(BattleCardsBasicCard.CardType.Block, 10);
+    }};
+
+    // Occurrence counts for each card in the starting draw pile for each player
+    public HashMap<BattleCardsBasicCard.CardType, Integer> initialCardCountsForPlayerDrawPiles = new HashMap<BattleCardsBasicCard.CardType, Integer>() {{
+        put(BattleCardsBasicCard.CardType.LightAttack, 2);
+        put(BattleCardsBasicCard.CardType.MediumAttack, 2);
+        put(BattleCardsBasicCard.CardType.StrongAttack, 2);
+        put(BattleCardsBasicCard.CardType.Bulldoze, 2);
+        put(BattleCardsBasicCard.CardType.Block, 2);
     }};
 
     public BattleCardsParameters(long seed) {

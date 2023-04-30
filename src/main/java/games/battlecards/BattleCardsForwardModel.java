@@ -11,9 +11,11 @@ import core.components.PartialObservableDeck;
 import games.GameType;
 import games.battlecards.BattleCardsGameState;
 import games.battlecards.cards.BattleCardsBasicCard;
+import games.battlecards.cards.BattleCardsBasicCard.CardType;
 import games.loveletter.LoveLetterGameState;
 import games.loveletter.LoveLetterParameters;
 import games.loveletter.cards.LoveLetterCard;
+import games.sushigo.SGGameState;
 import gametemplate.actions.GTAction;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +61,7 @@ public class BattleCardsForwardModel extends StandardForwardModel {
         bcgs.playerHealth = new Counter[noPlayers];
         bcgs.playerStamina = new Counter[noPlayers];
         bcgs.playerTarget = new Integer[noPlayers];
-
+        Random rnd = new Random(bcgs.params.getRandomSeed());
         //initialise counters
         for(int p = 0; p < noPlayers; p++){
             bcgs.playerScore[p].setValue(0);
@@ -67,10 +69,64 @@ public class BattleCardsForwardModel extends StandardForwardModel {
             bcgs.playerStamina[p].setValue(bcgs.params.MAX_STAMINA);
         }
 
-        //create deck construction pile
-
+        //create deck construction pile - using config from params object
+        HashMap<BattleCardsBasicCard.CardType, Integer> counts = bcgs.params.initialCardCountsForConstructionPile;
+        for (HashMap.Entry<BattleCardsBasicCard.CardType, Integer> entry : counts.entrySet()) {
+            Integer noOfCards = entry.getValue();
+            for (int i = 0; i < noOfCards; i++){
+                BattleCardsBasicCard card = new BattleCardsBasicCard(entry.getKey());
+                bcgs.deckConstructionPile.add(card);
+            }
+        }
+        //give the construction pile a shuffle also
+        bcgs.deckConstructionPile.shuffle(rnd);
 
         //create player draw piles
+        counts = bcgs.params.initialCardCountsForPlayerDrawPiles;
+        for (HashMap.Entry<BattleCardsBasicCard.CardType, Integer> entry : counts.entrySet()) {
+            Integer noOfCards = entry.getValue();
+            for(int p = 0; p < noPlayers; p++) {
+                for (int i = 0; i < noOfCards; i++) {
+                    BattleCardsBasicCard card = new BattleCardsBasicCard(entry.getKey());
+                    bcgs.playerDrawPile.get(p).add(card);
+                }
+            }
+        }
+
+        //give all player draw piles a shuffle
+        for(int p = 0; p < noPlayers; p++) {
+            bcgs.playerDrawPile.get(p).shuffle(rnd);
+        }
+    }
+    public void _startTurn(BattleCardsGameState bcgs) {
+        //Draw new hands for players, need to manage the case when not enough cards are
+        //in the player draw deck, and then the player discard deck is shuffled into
+        //the player draw deck and then reset
+        Random rnd = new Random(bcgs.params.getRandomSeed());
+        for (int p = 0; p < bcgs.getNPlayers(); p++) {
+            //first discard cards from hand into discard pile
+            Deck<BattleCardsBasicCard> playerHand = bcgs.playerHandCards.get(p);
+            for (int i = 0; i < playerHand.getSize(); i++) {
+                bcgs.playerDiscardCards.get(p).add(playerHand.get(i));
+            }
+            playerHand.clear();
+
+            //next draw cards from draw pile into hand
+            for (int i = 0; i < bcgs.params.NO_CARDS_DRAWN_PER_TURN; i++){
+                if (bcgs.playerDrawPile.get(p).getSize() == 0) {
+                    //add discards to draw pile
+                    for (int j = 0; j < bcgs.playerDiscardCards.get(p).getSize(); p++) {
+                        bcgs.playerDrawPile.get(p).add(bcgs.playerDiscardCards.get(p).get(j));
+                    }
+                    //clear discard pile
+                    bcgs.playerDiscardCards.get(p).clear();
+                    //shuffle draw pile
+                    bcgs.playerDrawPile.get(p).shuffle(rnd);
+                }
+                //draw card from draw pile into player hand
+                bcgs.playerHandCards.get(p).add(bcgs.playerDrawPile.get(p).draw());
+            }
+        }
     }
 
     /**
