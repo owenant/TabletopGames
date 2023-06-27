@@ -23,12 +23,12 @@ import players.human.ActionController;
  */
 public class BattleCardsGUIManager extends AbstractGUIManager {
 
-    public BattleCardsGUIManager(GamePanel parent, Game game, ActionController ac, int human) {
+   /* public BattleCardsGUIManager(GamePanel parent, Game game, ActionController ac, int human) {
         super(parent, game, ac, human);
         if (game == null) return;
 
         // TODO: set up GUI components and add to `parent`
-    }
+    }*/
 
     /**
      * Defines how many action button objects will be created and cached for usage if needed. Less is better, but
