@@ -17,6 +17,7 @@ import java.util.List;
  * <p>Extended actions should implement the {@link IExtendedSequence} interface and appropriate methods, as detailed below.</p>
  * <p>They should also extend the {@link AbstractAction} class, or any other core actions. As such, all guidelines in {@link GTAction} apply here as well.</p>
  */
+/*
 public class BattleCardsExtendedSequenceAction extends AbstractAction implements IExtendedSequence {
 
     // The extended sequence usually keeps record of the player who played this action, to be able to inform the game whose turn it is to make decisions
@@ -26,33 +27,38 @@ public class BattleCardsExtendedSequenceAction extends AbstractAction implements
         this.playerID = playerID;
     }
 
-    /**
+    */
+/**
      * Forward Model delegates to this from {@link core.StandardForwardModel#computeAvailableActions(AbstractGameState)}
      * if this Extended Sequence is currently active.
      *
      * @param state The current game state
      * @return the list of possible actions for the {@link AbstractGameState#getCurrentPlayer()}.
      * These may be instances of this same class, with more choices between different values for a not-yet filled in parameter.
-     */
+     *//*
+
     @Override
     public List<AbstractAction> _computeAvailableActions(AbstractGameState state) {
         // TODO populate this list with available actions
         return new ArrayList<>();
     }
 
-    /**
+    */
+/**
      * TurnOrder delegates to this from {@link core.turnorders.TurnOrder#getCurrentPlayer(AbstractGameState)}
      * if this Extended Sequence is currently active.
      *
      * @param state The current game state
      * @return The player ID whose move it is.
-     */
+     *//*
+
     @Override
     public int getCurrentPlayer(AbstractGameState state) {
         return playerID;
     }
 
-    /**
+    */
+/**
      * <p>This is called by ForwardModel whenever an action is about to be taken. It enables the IExtendedSequence
      * to maintain local state in whichever way is most suitable.</p>
      *
@@ -62,23 +68,27 @@ public class BattleCardsExtendedSequenceAction extends AbstractAction implements
      *
      * @param state The current game state
      * @param action The action about to be taken (so the game state has not yet been updated with it)
-     */
+     *//*
+
     @Override
     public void registerActionTaken(AbstractGameState state, AbstractAction action) {
         // TODO: Process the action that was taken.
     }
 
-    /**
+    */
+/**
      * @param state The current game state
      * @return True if this extended sequence has now completed and there is nothing left to do.
-     */
+     *//*
+
     @Override
     public boolean executionComplete(AbstractGameState state) {
         // TODO is execution of this sequence of actions complete?
         return true;
     }
 
-    /**
+    */
+/**
      * <p>Executes this action, applying its effect to the given game state. Can access any component IDs stored
      * through the {@link AbstractGameState#getComponentById(int)} method.</p>
      * <p>In extended sequences, this function makes a call to the
@@ -87,7 +97,8 @@ public class BattleCardsExtendedSequenceAction extends AbstractAction implements
      * statement if sometimes the action simply executes an effect in one step, or all parameters have values associated.</p>
      * @param gs - game state which should be modified by this action.
      * @return - true if successfully executed, false otherwise.
-     */
+     *//*
+
     @Override
     public boolean execute(AbstractGameState gs) {
         // TODO: Some functionality applied which changes the given game state.
@@ -95,12 +106,14 @@ public class BattleCardsExtendedSequenceAction extends AbstractAction implements
         return true;
     }
 
-    /**
+    */
+/**
      * @return Make sure to return an exact <b>deep</b> copy of the object, including all of its variables.
      * Make sure the return type is this class (e.g. GTAction) and NOT the super class AbstractAction.
      * <p>If all variables in this class are final or effectively final (which they should be),
      * then you can just return <code>`this`</code>.</p>
-     */
+     *//*
+
     @Override
     public BattleCardsExtendedSequenceAction copy() {
         // TODO: copy non-final variables appropriately
@@ -125,14 +138,17 @@ public class BattleCardsExtendedSequenceAction extends AbstractAction implements
         return "My action name";
     }
 
-    /**
+    */
+/**
      * @param gameState - game state provided for context.
      * @return A more descriptive alternative to the toString action, after access to the game state to e.g.
      * retrieve components for which only the ID is stored on the action object, and include the name of those components.
      * Optional.
-     */
+     *//*
+
     @Override
     public String getString(AbstractGameState gameState) {
         return toString();
     }
 }
+*/
