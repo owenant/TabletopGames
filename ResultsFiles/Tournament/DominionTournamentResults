@@ -1,0 +1,14 @@
+Game: Dominion, Players: 2, GamesPerMatchup: 1, Mode: SELF_PLAY
+MCTSPlayer got 3.00 points. MCTSPlayer won 75.0% of the 4 games of the tournament. MCTSPlayer won 75.0% of the 4 games it played during the tournament.
+Random got 1.00 points. Random won 25.0% of the 4 games of the tournament. Random won 25.0% of the 4 games it played during the tournament.
+---- Ranking ---- 
+MCTSPlayer: Win rate 0.75 +/- 0.09	Mean Ordinal 1.25 +/- 0.09
+Random: Win rate 0.25 +/- 0.03	Mean Ordinal 1.50 +/- 0.13
+
+Game: Dominion, Players: 2, GamesPerMatchup: 5, Mode: SELF_PLAY
+MCTSPlayer got 13.50 points. MCTSPlayer won 67.5% of the 20 games of the tournament. MCTSPlayer won 67.5% of the 20 games it played during the tournament.
+Random got 6.50 points. Random won 32.5% of the 20 games of the tournament. Random won 32.5% of the 20 games it played during the tournament.
+---- Ranking ---- 
+MCTSPlayer: Win rate 0.68 +/- 0.05	Mean Ordinal 1.30 +/- 0.05
+Random: Win rate 0.33 +/- 0.05	Mean Ordinal 1.65 +/- 0.05
+
