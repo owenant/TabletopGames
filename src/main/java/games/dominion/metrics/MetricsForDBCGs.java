@@ -5,11 +5,14 @@ import static utilities.Utils.getArg;
 
 import core.AbstractParameters;
 import core.AbstractPlayer;
+import core.Game;
 import evaluation.listeners.IGameListener;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
 import games.dominion.DominionFGParameters;
+import games.dominion.DominionForwardModel;
+import games.dominion.DominionGameState;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -27,10 +30,29 @@ import players.simple.RandomPlayer;
 public class MetricsForDBCGs {
   public static void main(String[] args) {
       System.out.println("Entry point to metrics for DBCGs....");
+      //runTournament();
+      runMaxPayoffDeckSearch();
+  }
 
-      //first focus on simple card metrics, for this we run a sequence of two player
-      //games, with both players using MCTS and looking at frequency of different card types
-      //in the final deck for each player
+  public static void runMaxPayoffDeckSearch(){
+      System.out.println("Search for optimal decks with different cost amounts....");
+      List<AbstractPlayer> players = Arrays.asList(new MCTSPlayer(), new MCTSPlayer());
+      Game game = new Game(GameType.Dominion, players, new DominionForwardModel(), new DominionGameState(new DominionFGParameters(System.currentTimeMillis()), players.size()));
+      DominionForwardModel fm = new DominionForwardModel();
+
+      //set-total cost amount
+      int totalCost = 10;
+
+      //create an initial deck that conforms to total cost amount
+
+      //check expected payoff amount from this deck (for checking to begin with)
+
+      //set-up GA.......
+
+  }
+
+  public static void runTournament(){
+      System.out.println("Run tournament....");
       long seed = 100;
       long startTime = System.currentTimeMillis();
       String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/DominionTournamentResults";
@@ -54,8 +76,6 @@ public class MetricsForDBCGs {
           gamesPerMatchup, mode, params);
 
       // Add listeners
-      //One listener for card types in player decks at end of game
-
       String listenerClass = "evaluation.listeners.MetricsGameListener";
       String genericMetricsClass = "evaluation.metrics.GameMetrics";
       String dominionMetricsClass = "games.dominion.stats.DominionMetrics";
