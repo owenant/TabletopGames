@@ -9,7 +9,7 @@ import evaluation.listeners.IGameListener;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
-import games.dominion.DominionParameters;
+import games.dominion.DominionFGParameters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -38,7 +38,8 @@ public class MetricsForDBCGs {
 
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
-      agents.add(new MCTSPlayer());
+      //agents.add(new MCTSPlayer());
+      agents.add(new RandomPlayer());
       agents.add(new RandomPlayer());
 
       //set-up game type and other tournament parameters
@@ -46,23 +47,26 @@ public class MetricsForDBCGs {
       int playersPerGame = 2;
       int gamesPerMatchup = 5;
       TournamentMode mode = TournamentMode.SELF_PLAY;
-      DominionParameters params = new DominionParameters(seed);
+      DominionFGParameters params = new DominionFGParameters(seed);
 
       //set-up tournament
       RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
           gamesPerMatchup, mode, params);
 
       // Add listeners
-      //One listener for VP points at end of the game
       //One listener for card types in player decks at end of game
 
       String listenerClass = "evaluation.listeners.MetricsGameListener";
-      String metricsClass = "evaluation.metrics.GameMetrics";
-      IGameListener gameTracker = IGameListener.createListener(listenerClass, metricsClass);
+      String genericMetricsClass = "evaluation.metrics.GameMetrics";
+      String dominionMetricsClass = "games.dominion.stats.DominionMetrics";
+      IGameListener gameTracker1 = IGameListener.createListener(listenerClass, genericMetricsClass);
+      IGameListener gameTracker2 = IGameListener.createListener(listenerClass, dominionMetricsClass);
+      gameTracker1.setOutputDirectory(destdirListener);
+      gameTracker2.setOutputDirectory(destdirListener);
       List<IGameListener> dominionlisteners = new ArrayList<IGameListener>();
-      dominionlisteners.add(gameTracker);
+      dominionlisteners.add(gameTracker1);
+      dominionlisteners.add(gameTracker2);
       tournament.setListeners(dominionlisteners);
-      gameTracker.setOutputDirectory(destdirListener);
 
       //run tournament
       tournament.verbose = true;
