@@ -1,0 +1,12 @@
+ComputationTimes: Column: Actions Available Compute (ms)
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                4378  |
+      sum  |   24094.00399999988  |
+     Mean  |   5.503427135678397  |
+      Min  |               0.974  |
+      Max  |            8567.562  |
+    Range  |            8566.588  |
+ Variance  |  20079.612891885663  |
+ Std. Dev  |  141.70255075998338  |
+

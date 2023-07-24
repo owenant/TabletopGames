@@ -1,0 +1,12 @@
+Actions:      Column: Action Space Size     
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                4378  |
+      sum  |                9915  |
+     Mean  |  2.2647327546825005  |
+      Min  |                   1  |
+      Max  |                   7  |
+    Range  |                   6  |
+ Variance  |   2.045733319013706  |
+ Std. Dev  |  1.4302913406064186  |
+

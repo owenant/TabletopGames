@@ -1,0 +1,12 @@
+OrdinalPosition:           Column: Player-0          
+ Measure   |         Value         |
+------------------------------------
+    Count  |                   20  |
+      sum  |                   29  |
+     Mean  |   1.4500000000000004  |
+      Min  |                    1  |
+      Max  |                    2  |
+    Range  |                    1  |
+ Variance  |  0.26052631578947355  |
+ Std. Dev  |   0.5104177855340403  |
+

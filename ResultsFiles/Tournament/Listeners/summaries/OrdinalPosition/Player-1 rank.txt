@@ -1,0 +1,6 @@
+OrdinalPosition: Column: Player-1 rank 
+ Category  |  Count  |
+----------------------
+        2  |     11  |
+        1  |      9  |
+

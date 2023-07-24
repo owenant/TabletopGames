@@ -1,0 +1,12 @@
+ComputationTimes:          Column: Copy (ms)         
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                4378  |
+      sum  |  161420.13699999958  |
+     Mean  |   36.87074851530371  |
+      Min  |              18.619  |
+      Max  |             955.979  |
+    Range  |              937.36  |
+ Variance  |    813.486794353234  |
+ Std. Dev  |  28.521689893013598  |
+

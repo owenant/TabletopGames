@@ -12,3 +12,10 @@ Random got 6.50 points. Random won 32.5% of the 20 games of the tournament. Rand
 MCTSPlayer: Win rate 0.68 +/- 0.05	Mean Ordinal 1.30 +/- 0.05
 Random: Win rate 0.33 +/- 0.05	Mean Ordinal 1.65 +/- 0.05
 
+Game: Dominion, Players: 2, GamesPerMatchup: 5, Mode: SELF_PLAY
+MCTSPlayer got 13.00 points. MCTSPlayer won 65.0% of the 20 games of the tournament. MCTSPlayer won 65.0% of the 20 games it played during the tournament.
+Random got 7.00 points. Random won 35.0% of the 20 games of the tournament. Random won 35.0% of the 20 games it played during the tournament.
+---- Ranking ---- 
+MCTSPlayer: Win rate 0.65 +/- 0.05	Mean Ordinal 1.35 +/- 0.05
+Random: Win rate 0.35 +/- 0.05	Mean Ordinal 1.65 +/- 0.05
+

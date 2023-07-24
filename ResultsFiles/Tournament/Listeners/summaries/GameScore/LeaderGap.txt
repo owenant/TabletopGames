@@ -1,0 +1,12 @@
+GameScore:         Column: LeaderGap         
+ Measure   |        Value        |
+----------------------------------
+    Count  |               5480  |
+      sum  |              40386  |
+     Mean  |  7.369708029197073  |
+      Min  |                  0  |
+      Max  |                 40  |
+    Range  |                 40  |
+ Variance  |  47.40444817171876  |
+ Std. Dev  |  6.885088828164729  |
+

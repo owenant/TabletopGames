@@ -1,0 +1,12 @@
+Decisions: Column: DecisionPoints (Mean)
+ Measure   |  Value  |
+----------------------
+    Count  |     20  |
+      sum  |     10  |
+     Mean  |    0.5  |
+      Min  |    0.5  |
+      Max  |    0.5  |
+    Range  |      0  |
+ Variance  |      0  |
+ Std. Dev  |      0  |
+

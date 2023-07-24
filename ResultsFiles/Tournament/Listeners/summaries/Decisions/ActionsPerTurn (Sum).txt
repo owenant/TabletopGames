@@ -1,0 +1,12 @@
+Decisions:    Column: ActionsPerTurn (Sum)    
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                  20  |
+      sum  |                4358  |
+     Mean  |               217.9  |
+      Min  |                 165  |
+      Max  |                 279  |
+    Range  |                 114  |
+ Variance  |  1097.4631578947367  |
+ Std. Dev  |   33.12798149442155  |
+

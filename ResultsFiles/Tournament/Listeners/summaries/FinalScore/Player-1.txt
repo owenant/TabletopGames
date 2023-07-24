@@ -1,0 +1,12 @@
+FinalScore:          Column: Player-1          
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                  20  |
+      sum  |                 550  |
+     Mean  |                27.5  |
+      Min  |                   9  |
+      Max  |                  57  |
+    Range  |                  48  |
+ Variance  |  165.73684210526312  |
+ Std. Dev  |   12.87388216915407  |
+

@@ -5,11 +5,15 @@ import static utilities.Utils.getArg;
 
 import core.AbstractParameters;
 import core.AbstractPlayer;
+import evaluation.listeners.IGameListener;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.RoundRobinTournament.TournamentMode;
 import games.GameType;
 import games.dominion.DominionParameters;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import players.PlayerFactory;
 import players.mcts.BasicMCTSPlayer;
 import players.mcts.MCTSPlayer;
@@ -30,6 +34,7 @@ public class MetricsForDBCGs {
       long seed = 100;
       long startTime = System.currentTimeMillis();
       String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/DominionTournamentResults";
+      String destdirListener = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners";
 
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
@@ -46,6 +51,18 @@ public class MetricsForDBCGs {
       //set-up tournament
       RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
           gamesPerMatchup, mode, params);
+
+      // Add listeners
+      //One listener for VP points at end of the game
+      //One listener for card types in player decks at end of game
+
+      String listenerClass = "evaluation.listeners.MetricsGameListener";
+      String metricsClass = "evaluation.metrics.GameMetrics";
+      IGameListener gameTracker = IGameListener.createListener(listenerClass, metricsClass);
+      List<IGameListener> dominionlisteners = new ArrayList<IGameListener>();
+      dominionlisteners.add(gameTracker);
+      tournament.setListeners(dominionlisteners);
+      gameTracker.setOutputDirectory(destdirListener);
 
       //run tournament
       tournament.verbose = true;

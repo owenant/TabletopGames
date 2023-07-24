@@ -1,0 +1,12 @@
+Decisions:          Column: Decisions         
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                  20  |
+      sum  |                2189  |
+     Mean  |              109.45  |
+      Min  |                  83  |
+      Max  |                 140  |
+    Range  |                  57  |
+ Variance  |   274.3657894736842  |
+ Std. Dev  |  16.563990747210774  |
+

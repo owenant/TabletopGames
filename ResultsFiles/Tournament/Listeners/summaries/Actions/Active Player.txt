@@ -1,0 +1,12 @@
+Actions:        Column: Active Player        
+ Measure   |         Value         |
+------------------------------------
+    Count  |                 4378  |
+      sum  |                 2174  |
+     Mean  |   0.4965737779808122  |
+      Min  |                    0  |
+      Max  |                    1  |
+    Range  |                    1  |
+ Variance  |  0.25004537506733193  |
+ Std. Dev  |   0.5000453730086221  |
+

@@ -1,0 +1,6 @@
+PlayerType:   Column: PlayerType-1  
+  Category   |  Count  |
+------------------------
+ MCTSPlayer  |     10  |
+     Random  |     10  |
+

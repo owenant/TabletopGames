@@ -1,0 +1,12 @@
+StateSpace:            Column: Size            
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                4398  |
+      sum  |              270520  |
+     Mean  |   61.50977717144158  |
+      Min  |                  20  |
+      Max  |                 120  |
+    Range  |                 100  |
+ Variance  |   592.7675868959811  |
+ Std. Dev  |  24.346818824971386  |
+

@@ -1,0 +1,12 @@
+ComputationTimes:         Column: Agent (ms)         
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                4378  |
+      sum  |   49396851.41499999  |
+     Mean  |  11282.971999771533  |
+      Min  |                   0  |
+      Max  |          322006.666  |
+    Range  |          322006.666  |
+ Variance  |  221123904.09572908  |
+ Std. Dev  |  14870.235509087577  |
+

@@ -1,0 +1,12 @@
+GameScore:           Column: Average          
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                5480  |
+      sum  |               91406  |
+     Mean  |  16.679927007299284  |
+      Min  |                   3  |
+      Max  |                  43  |
+    Range  |                  40  |
+ Variance  |   69.97811497915697  |
+ Std. Dev  |   8.365292282948454  |
+

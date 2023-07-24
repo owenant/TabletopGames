@@ -1,0 +1,12 @@
+ComputationTimes:          Column: Next (ms)         
+ Measure   |        Value         |
+-----------------------------------
+    Count  |                4378  |
+      sum  |   35754.16399999998  |
+     Mean  |   8.166780264961185  |
+      Min  |               0.838  |
+      Max  |            3371.337  |
+    Range  |            3370.499  |
+ Variance  |  2691.1945634746526  |
+ Std. Dev  |  51.876724679519356  |
+
