@@ -24,7 +24,9 @@ public abstract class AbstractTournament {
     protected Game games;
     // Number of players in the games, index matches the games list
     protected int playersPerGame;
-    protected String resultsFile;
+    //changed by AO
+    //protected String resultsFile;
+    public String resultsFile;
     // Filename to write the results of the tournament
 
 
