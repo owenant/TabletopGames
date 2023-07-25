@@ -3,13 +3,19 @@ package games.dominion.metrics;
 import static games.GameType.Dominion;
 import static utilities.Utils.getArg;
 
+import core.AbstractGameState;
 import core.AbstractParameters;
 import core.AbstractPlayer;
 import core.Game;
+import core.actions.AbstractAction;
+import core.components.Deck;
+import core.CoreConstants;
+import core.components.PartialObservableDeck;
 import evaluation.listeners.IGameListener;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
+import games.dominion.DominionConstants;
 import games.dominion.DominionFGParameters;
 import games.dominion.DominionForwardModel;
 import games.dominion.DominionGameState;
@@ -17,6 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import games.dominion.cards.CardType;
+import games.dominion.cards.DominionCard;
 import players.PlayerFactory;
 import players.mcts.BasicMCTSPlayer;
 import players.mcts.MCTSPlayer;
@@ -37,17 +46,64 @@ public class MetricsForDBCGs {
   public static void runMaxPayoffDeckSearch(){
       System.out.println("Search for optimal decks with different cost amounts....");
       List<AbstractPlayer> players = Arrays.asList(new MCTSPlayer(), new MCTSPlayer());
-      Game game = new Game(GameType.Dominion, players, new DominionForwardModel(), new DominionGameState(new DominionFGParameters(System.currentTimeMillis()), players.size()));
+      int playerID = 0;
+      DominionFGParameters params = new DominionFGParameters(System.currentTimeMillis());
+      DominionGameState state = new DominionGameState(params, players.size());
       DominionForwardModel fm = new DominionForwardModel();
 
       //set-total cost amount
-      int totalCost = 10;
+      int totalCost = 30;
 
-      //create an initial deck that conforms to total cost amount
+      //create an initial deck that conforms to total cost amount - we do this by starting with a deck of coppers
+      PartialObservableDeck<DominionCard> draw = new PartialObservableDeck<DominionCard>("player_draw", playerID, CoreConstants.VisibilityMode.HIDDEN_TO_ALL);
+      PartialObservableDeck<DominionCard> hand = new PartialObservableDeck<DominionCard>("player_hand", playerID, CoreConstants.VisibilityMode.VISIBLE_TO_OWNER);
+      Deck<DominionCard> discard = new Deck<DominionCard>("player_discard", playerID, CoreConstants.VisibilityMode.VISIBLE_TO_ALL);
+      boolean[] visibilityPerPlayer = new boolean[2];
+      for(int i =0; i < players.size(); i++){
+          visibilityPerPlayer[i] = false;
+      }
+      for(int i =0; i < totalCost; i++){
+          draw.add(DominionCard.create(CardType.COPPER), visibilityPerPlayer);
+      }
+      state.setDeck(DominionConstants.DeckType.DRAW,playerID,draw);
+      //state.setDeck(DominionConstants.DeckType.HAND,playerID,hand);
+      //state.setDeck(DominionConstants.DeckType.DISCARD,playerID,discard);
+      Game game = new Game(GameType.Dominion, players, fm, state);
 
       //check expected payoff amount from this deck (for checking to begin with)
+      int noSims = 2;
+      int payoff = expectedDeckPayoff(game, params, noSims);
 
       //set-up GA.......
+
+  }
+
+  public static int expectedDeckPayoff(Game domGame, DominionFGParameters domParams, int noSimulations)
+  {
+      //source.add(discard);
+      //discard.clear();
+      //source.shuffle(rnd);
+
+      //note this function assumes that the player's hand and discard pile are empty to begin with and we wish to just play
+      //one hand. Start by drawing into active player's hand
+      DominionGameState domState = (DominionGameState) domGame.getGameState();
+      int activePlayer = domState.getCurrentPlayer();
+      for (int i = 0; i < domParams.HAND_SIZE; i++)
+          domState.drawCard(activePlayer);
+
+      //check out the possible actions for active player
+      AbstractGameState observation = domState.copy(activePlayer);
+      List<AbstractAction> observedActions = domGame.getForwardModel().computeAvailableActions(observation);
+
+      AbstractAction nextAction = domGame.oneAction();
+
+
+      //play cards in hand, note AI might not be able to play all cards here, due to needing multiple actions
+
+      //AbstractAction oneAction()
+      //fwdModel._afterAction(domState, AbstractAction action);
+
+      return 0;
 
   }
 

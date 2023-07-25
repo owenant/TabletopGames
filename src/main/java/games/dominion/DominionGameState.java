@@ -199,6 +199,23 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         throw new AssertionError("Unknown deck type " + deck);
     }
 
+    //added by AO - used for algorithm to find optimal payoff deck in MetricsForDBCGs
+    public void setDeck(DeckType deck, int playerId, Deck<DominionCard> cards) {
+        switch (deck) {
+            case HAND:
+                playerHands[playerId] = (PartialObservableDeck<DominionCard>) cards;
+            case DRAW:
+                playerDrawPiles[playerId] = (PartialObservableDeck<DominionCard>) cards;
+            case DISCARD:
+                playerDiscards[playerId] = cards;
+            case TABLE:
+                playerTableaux[playerId] = cards;
+            case TRASH:
+                trashPile = cards;
+        }
+        throw new AssertionError("Unknown deck type " + deck);
+    }
+
     public int cardsOfType(CardType type, int playerId, DeckType deck) {
         Deck<DominionCard> allCards;
         switch (deck) {
