@@ -204,14 +204,21 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         switch (deck) {
             case HAND:
                 playerHands[playerId] = (PartialObservableDeck<DominionCard>) cards;
+                //for some reason code moves onto next swtich statement if no return is placed here
+                //TODO: figure out how to remove return statements, they shouldnt be necessary
+                return;
             case DRAW:
                 playerDrawPiles[playerId] = (PartialObservableDeck<DominionCard>) cards;
+                return;
             case DISCARD:
                 playerDiscards[playerId] = cards;
+                return;
             case TABLE:
                 playerTableaux[playerId] = cards;
+                return;
             case TRASH:
                 trashPile = cards;
+                return;
         }
         throw new AssertionError("Unknown deck type " + deck);
     }
