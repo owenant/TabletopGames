@@ -52,7 +52,9 @@ public class MetricsForDBCGs {
       DominionForwardModel fm = new DominionForwardModel();
       //note creating a game initialises the state
       Game domGame = new Game(GameType.Dominion, players, fm, state);
-      int activePlayer = state.getCurrentPlayer();
+
+      //focus player is the player whose deck we will be evolving
+      int focusPlayer = state.getCurrentPlayer();
 
       //set-total cost amount
       int totalCost = 30;
@@ -67,44 +69,59 @@ public class MetricsForDBCGs {
       //Deck<DominionCard> discard = new Deck<DominionCard>("player_discard", playerID, CoreConstants.VisibilityMode.VISIBLE_TO_ALL);
       boolean[] visibleToPlayer1 = {true, false};
       boolean[] notVisibleToEitherPlayer = {false, false};
-      PartialObservableDeck<DominionCard> draw = new PartialObservableDeck<DominionCard>("player_draw", activePlayer, notVisibleToEitherPlayer);
-      PartialObservableDeck<DominionCard> hand = new PartialObservableDeck<DominionCard>("player_hand", activePlayer, visibleToPlayer1);
+      PartialObservableDeck<DominionCard> draw = new PartialObservableDeck<DominionCard>("player_draw", focusPlayer, notVisibleToEitherPlayer);
+      PartialObservableDeck<DominionCard> hand = new PartialObservableDeck<DominionCard>("player_hand", focusPlayer, visibleToPlayer1);
       //Deck<DominionCard> discard = new Deck<DominionCard>("player_discard", activePlayer, notVisibleToEitherPlayer);
       for(int i =0; i < totalCost; i++) {
           draw.add(DominionCard.create(CardType.COPPER),notVisibleToEitherPlayer);
       }
       //issue by setting the deck in the state some how we cause problems with the state.copy() function
       //looks like we are not setting some parameters around the decks correctly. We need to set deckVisibility in addition to visibility mode?
-      state.setDeck(DeckType.DRAW,activePlayer,draw);
-      state.setDeck(DominionConstants.DeckType.HAND,activePlayer,hand);
+      state.setDeck(DeckType.DRAW,focusPlayer,draw);
+      state.setDeck(DominionConstants.DeckType.HAND,focusPlayer,hand);
       //state.setDeck(DominionConstants.DeckType.DISCARD,playerID,discard);
 
       //start by drawing cards into hand
-      AbstractGameState observation = state.copy(activePlayer);
       for (int i = 0; i < params.HAND_SIZE; i++)
-          state.drawCard(activePlayer);
+          state.drawCard(focusPlayer);
 
-      observation = state.copy(activePlayer);
-      List<AbstractAction> observedActions = fm.computeAvailableActions(observation);
-      //next we need to play the hand
-      //how do we get the AI to play, rather than selecting actions in this code?
+      //store a copy of this initial starting state (arrghhh...no copy constructor is available)
+      DominionGameState initialState = (DominionGameState) state.copy();
 
-      //????
+      int noMoves = 60;
+      int noObsOfPayOffs = 0;
+      double expectedPayout = 0;
+      for (int i=0 ; i< noMoves; i++) {
+          //observe current state
+          AbstractGameState observation = state.copy(focusPlayer);
+          List<AbstractAction> possibleActions = fm.computeAvailableActions(observation);
+          AbstractAction aiAction = players.get(focusPlayer)
+              .getAction(observation, possibleActions);
+          //apply AI action to current state
+          fm.next(state, aiAction);
 
+          //if in buy phase for focus player figure out what the payoff was
+          if (observation.getGamePhase() == DominionGameState.DominionGamePhase.Buy && state.getCurrentPlayer() == focusPlayer){
+              //grab total treasure value
+              int payout = state.availableSpend(focusPlayer);
+              expectedPayout += payout;
 
-      //first off look for actions from action cards
-      //AbstractAction nextAction = domGame.oneAction();
-      //play action cards in player one hand
-      //fm.next(state, nextAction);
-      //then we enter buy phase
+              //reset state, ready to repeat
+              state = (DominionGameState) initialState.copy();
 
-      //Game game = new Game(GameType.Dominion, players, fm, state);
+              //keep a counter for a sense check
+              noObsOfPayOffs += 1;
 
-      //check expected payoff amount from this deck (for checking to begin with)
-      //int noSims = 2;
-      //int payoff = expectedDeckPayoff(game, params, noSims);
+              //output result
+              System.out.printf("Payout: %d, iteration: %d", payout,noObsOfPayOffs);
+              System.out.println("");
+          }
+      }
+      expectedPayout = expectedPayout/(noObsOfPayOffs*1.0);
+      System.out.printf("Expected Payout: %f", expectedPayout);
 
-      //set-up GA.......
+      //set-up GA.......can we do this so that genetic code is number of cards of each type and we have
+      //the constraint that the total cost of cards is fixed. Constrained GA?
 
   }
 
