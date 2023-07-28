@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import games.dominion.cards.CardType;
 import games.dominion.cards.DominionCard;
@@ -46,59 +47,119 @@ public class MetricsForDBCGs {
 
   public static void runMaxPayoffDeckSearch(){
       System.out.println("Search for optimal decks with different cost amounts....");
+
+      //set-up Dominion game and state
       List<AbstractPlayer> players = Arrays.asList(new MCTSPlayer(), new MCTSPlayer());
       DominionFGParameters params = new DominionFGParameters(System.currentTimeMillis());
       DominionGameState state = new DominionGameState(params, players.size());
       DominionForwardModel fm = new DominionForwardModel();
       //note creating a game initialises the state
-      Game domGame = new Game(GameType.Dominion, players, fm, state);
-
-      //focus player is the player whose deck we will be evolving
-      int focusPlayer = state.getCurrentPlayer();
+      Game game = new Game(GameType.Dominion, players, fm, state);
 
       //set-total cost amount
       int totalCost = 30;
 
-      //create an initial deck that conforms to total cost amount - we do this by starting with a deck of coppers
-      //boolean[] visibilityPerPlayer = new boolean[2];
-      //for(int i =0; i < players.size(); i++){
-      //    visibilityPerPlayer[i] = false;
-      //}
-      //PartialObservableDeck<DominionCard> draw = new PartialObservableDeck<DominionCard>("player_draw", playerID, CoreConstants.VisibilityMode.HIDDEN_TO_ALL);
-      //PartialObservableDeck<DominionCard> hand = new PartialObservableDeck<DominionCard>("player_hand", playerID, CoreConstants.VisibilityMode.VISIBLE_TO_OWNER);
-      //Deck<DominionCard> discard = new Deck<DominionCard>("player_discard", playerID, CoreConstants.VisibilityMode.VISIBLE_TO_ALL);
-      boolean[] visibleToPlayer1 = {true, false};
-      boolean[] notVisibleToEitherPlayer = {false, false};
-      PartialObservableDeck<DominionCard> draw = new PartialObservableDeck<DominionCard>("player_draw", focusPlayer, notVisibleToEitherPlayer);
-      PartialObservableDeck<DominionCard> hand = new PartialObservableDeck<DominionCard>("player_hand", focusPlayer, visibleToPlayer1);
-      //Deck<DominionCard> discard = new Deck<DominionCard>("player_discard", activePlayer, notVisibleToEitherPlayer);
-      for(int i =0; i < totalCost; i++) {
-          draw.add(DominionCard.create(CardType.COPPER),notVisibleToEitherPlayer);
+      //no of simulations for computing expected deck payoff
+      int noSims = 10;
+
+      //A deck will be represented by a chromosome (vector) consisting of a collection
+      // of 17 genes which are integers representing the number of cards of a given
+      //card type in the deck. Here we are assuming we are using the base collection of cards
+
+      //set-up vector to  convert chromosome index to card type
+      CardType[] indexToType = new CardType[11];
+      indexToType[0] = CardType.CELLAR;
+      indexToType[1] = CardType.MARKET;
+      indexToType[2] = CardType.MERCHANT;
+      indexToType[3] = CardType.MILITIA;//will impact, but full benefit wont be recognised
+      indexToType[4] = CardType.MINE;
+      indexToType[5] = CardType.MOAT; //will impact, but full benefit wont be recognised
+      //indexToType[6] = CardType.REMODEL; //wont impact treasure
+      indexToType[6] = CardType.SMITHY;
+      indexToType[7] = CardType.VILLAGE;
+      //indexToType[9] = CardType.WORKSHOP;//wont impact treasure
+      indexToType[8] = CardType.GOLD;
+      indexToType[9] = CardType.SILVER;
+      indexToType[10] = CardType.COPPER;
+
+      //set up initial chromosome consisting of 30 copper cards
+      int[] initialGuess = {0,0,0,0,0,0,0,0,3,0,0};
+
+      //check cost of initial deck
+      int cost = deckCost(initialGuess, indexToType);
+
+      //calculate fitness
+      double fitnessResult = fitness(initialGuess, indexToType, game, params, noSims);
+      System.out.printf("Expected Payout: %f", fitnessResult);
+
+      //note: use max entropy for mutations and penalty function for cost constraint.
+      //fitness function is given by expected deck pay off
+      //can I use JGAP package? Not sure I need to....
+
+      //set-up GA.......can we do this so that genetic code is number of cards of each type and we have
+      //the constraint that the total cost of cards is fixed. Constrained GA?
+
+  }
+
+  public static int deckCost(int[] deckComposition, CardType[] cardTypes) {
+      int cost = 0;
+      for (int i = 0; i < deckComposition.length; i++){
+          cost += deckComposition[i] * cardTypes[i].cost;
       }
-      //issue by setting the deck in the state some how we cause problems with the state.copy() function
-      //looks like we are not setting some parameters around the decks correctly. We need to set deckVisibility in addition to visibility mode?
-      state.setDeck(DeckType.DRAW,focusPlayer,draw);
-      state.setDeck(DominionConstants.DeckType.HAND,focusPlayer,hand);
-      //state.setDeck(DominionConstants.DeckType.DISCARD,playerID,discard);
+      return cost;
+  }
 
-      //start by drawing cards into hand
-      for (int i = 0; i < params.HAND_SIZE; i++)
-          state.drawCard(focusPlayer);
+  public static double fitness(int[] deckComposition, CardType[] cardTypes, Game domGame, DominionFGParameters domParams, int noSimulations){
+      //provides fitness function for deck
+      //for now driven by treasures, but could be update to give credit to things like
+      //card trashing or automatically gaining a new card etc. They could be translated into
+      //an approximate treasure worth
 
-      //store a copy of this initial starting state (arrghhh...no copy constructor is available)
+      double result = expectedDeckPayoff(deckComposition, cardTypes, domGame, domParams,noSimulations);
+
+      return result;
+  }
+
+  public static double expectedDeckPayoff(int[] deckComposition, CardType[] cardTypes, Game domGame, DominionFGParameters domParams, int noSimulations)
+  {
+      boolean[] notVisibleToEitherPlayer = {false, false};
+      //focus player is the player whose deck we will be evolving
+      DominionGameState state = (DominionGameState) domGame.getGameState();
+      DominionForwardModel fm = (DominionForwardModel) domGame.getForwardModel();
+      List<AbstractPlayer> players = domGame.getPlayers();
+      int focusPlayer = state.getCurrentPlayer();
+      //store a copy of this initial starting state to reset at end of function call
       DominionGameState initialState = (DominionGameState) state.copy();
 
-      int noMoves = 60;
+      //create player draw deck
+      PartialObservableDeck<DominionCard> draw = new PartialObservableDeck<DominionCard>("player_draw", focusPlayer, notVisibleToEitherPlayer);
+      for(int i =0; i < deckComposition.length; i++) {
+          for(int j = 0; j < deckComposition[i]; j++){
+              draw.add(DominionCard.create(cardTypes[i]),notVisibleToEitherPlayer);
+          }
+      }
+      state.setDeck(DeckType.DRAW,focusPlayer,draw);
+
+      //make sure there are no cards in hand
+      boolean[] visibleToFocusPlayer = {true, false};
+      PartialObservableDeck<DominionCard> hand = new PartialObservableDeck<DominionCard>("player_hand", focusPlayer, visibleToFocusPlayer);
+      state.setDeck(DeckType.HAND,focusPlayer,hand);
+
+      //start by drawing cards into hand
+      for (int i = 0; i < domParams.HAND_SIZE; i++)
+          state.drawCard(focusPlayer);
+
+      //store a copy of this starting state for this deck
+      DominionGameState startState = (DominionGameState) state.copy();
+
       int noObsOfPayOffs = 0;
       double expectedPayout = 0;
-      for (int i=0 ; i< noMoves; i++) {
+      while(noObsOfPayOffs <= noSimulations){
           //observe current state
           AbstractGameState observation = state.copy(focusPlayer);
           List<AbstractAction> possibleActions = fm.computeAvailableActions(observation);
           AbstractAction aiAction = players.get(focusPlayer)
               .getAction(observation, possibleActions);
-          //apply AI action to current state
-          fm.next(state, aiAction);
 
           //if in buy phase for focus player figure out what the payoff was
           if (observation.getGamePhase() == DominionGameState.DominionGamePhase.Buy && state.getCurrentPlayer() == focusPlayer){
@@ -107,54 +168,22 @@ public class MetricsForDBCGs {
               expectedPayout += payout;
 
               //reset state, ready to repeat
-              state = (DominionGameState) initialState.copy();
+              state = (DominionGameState) startState.copy();
 
               //keep a counter for a sense check
               noObsOfPayOffs += 1;
-
-              //output result
-              System.out.printf("Payout: %d, iteration: %d", payout,noObsOfPayOffs);
-              System.out.println("");
+          }else{
+              //otherwise perform the AI action
+              fm.next(state, aiAction);
           }
       }
+      //make sure state is reset
+      state = (DominionGameState) initialState.copy();
+
+      //compute final expected payoff
       expectedPayout = expectedPayout/(noObsOfPayOffs*1.0);
-      System.out.printf("Expected Payout: %f", expectedPayout);
 
-      //set-up GA.......can we do this so that genetic code is number of cards of each type and we have
-      //the constraint that the total cost of cards is fixed. Constrained GA?
-
-  }
-
-  public static int expectedDeckPayoff(Game domGame, DominionFGParameters domParams, int noSimulations)
-  {
-      //source.add(discard);
-      //discard.clear();
-      //source.shuffle(rnd);
-
-      //note this function assumes that the player's hand and discard pile are empty to begin with and we wish to just play
-      //one hand. Start by drawing into active player's hand
-      DominionGameState domState = (DominionGameState) domGame.getGameState();
-      int activePlayer = domState.getCurrentPlayer();
-      AbstractGameState observation = domState.copy(activePlayer);
-      List<AbstractAction> observedActions = domGame.getForwardModel().computeAvailableActions(observation);
-
-      for (int i = 0; i < domParams.HAND_SIZE; i++)
-          domState.drawCard(activePlayer);
-
-      //check out the possible actions for active player
-      //AbstractGameState observation = domState.copy(activePlayer);
-      //List<AbstractAction> observedActions = domGame.getForwardModel().computeAvailableActions(observation);
-
-      AbstractAction nextAction = domGame.oneAction();
-
-
-      //play cards in hand, note AI might not be able to play all cards here, due to needing multiple actions
-
-      //AbstractAction oneAction()
-      //fwdModel._afterAction(domState, AbstractAction action);
-
-      return 0;
-
+      return expectedPayout;
   }
 
   public static void runTournament(){
