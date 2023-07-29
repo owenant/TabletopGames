@@ -24,6 +24,9 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.HashSet;
 
 import games.dominion.cards.CardType;
 import games.dominion.cards.DominionCard;
@@ -92,13 +95,62 @@ public class MetricsForDBCGs {
       double fitnessResult = fitness(initialGuess, indexToType, game, params, noSims);
       System.out.printf("Expected Payout: %f", fitnessResult);
 
+      //create initial population at random filtering out those that dont satisfy
+      //the cost constraints
+      int noIndividuals = 100;
+      long seed = 100;
+      int maxIterations = 100000;
+      Set<int[]> initialPop = genInitialPopulation(totalCost, noIndividuals, indexToType,
+          seed, maxIterations);
+
+      //select parents - probability based on fitness function
+
+      //create crossover offspring that still obeys cost constraint
+
+      //apply max entropy mutation
+
       //note: use max entropy for mutations and penalty function for cost constraint.
       //fitness function is given by expected deck pay off
       //can I use JGAP package? Not sure I need to....
+  }
 
-      //set-up GA.......can we do this so that genetic code is number of cards of each type and we have
-      //the constraint that the total cost of cards is fixed. Constrained GA?
+  public static Set<int[]> genInitialPopulation(int costConstraint, int numberOfIndividuals,
+      CardType[] cardTypes, long seed, int maxIterations){
+      //generate random samples keeping only those that satisfy the cost constraint
+      //set a maximum number of copies for any type of action card
+      Random rnd = new Random(seed);
+      int maxNoActionCardsOfAnyType = 5;
+      //also set maximum for any type of treasure card
+      int maxNoTreasureCardsOfAnyType = 10;
+      int noOfSamplesGenerated = 0;
+      //keep a track of total number of randomly generated decks
+      int decksGenerated = 0;
+      Set<int[]> pop = new HashSet<int[]>();
+      int[] deck = new int[cardTypes.length];
+      while(noOfSamplesGenerated < numberOfIndividuals){
+          for(int i = 0; i < cardTypes.length; i++){
+              if (cardTypes[i] == CardType.COPPER || cardTypes[i] == CardType.SILVER
+                  || cardTypes[i] == CardType.GOLD){
+                  deck[i] = rnd.nextInt(maxNoTreasureCardsOfAnyType);
+              }else{
+                  deck[i] = rnd.nextInt(maxNoActionCardsOfAnyType);
+              }
+          }
+          int cost = deckCost(deck, cardTypes);
+          if(cost == costConstraint){
+              pop.add(deck);
+              noOfSamplesGenerated += 1;
+          }
 
+          //for low costs we might generate all possible decks before generating
+          //the required number of iterations, so exit if a max number of iterations are
+          //attempted
+          decksGenerated += 1;
+          if (decksGenerated >= maxIterations){
+              break;
+          }
+      }
+      return pop;
   }
 
   public static int deckCost(int[] deckComposition, CardType[] cardTypes) {
