@@ -99,7 +99,7 @@ public class MetricsForDBCGs {
       //the cost constraints
       int noIndividuals = 100;
       long seed = 100;
-      int maxIterations = 100000;
+      int maxIterations = 1000000;
       Set<int[]> initialPop = genInitialPopulation(totalCost, noIndividuals, indexToType,
           seed, maxIterations);
 
@@ -126,8 +126,8 @@ public class MetricsForDBCGs {
       //keep a track of total number of randomly generated decks
       int decksGenerated = 0;
       Set<int[]> pop = new HashSet<int[]>();
-      int[] deck = new int[cardTypes.length];
       while(noOfSamplesGenerated < numberOfIndividuals){
+          int[] deck = new int[cardTypes.length];
           for(int i = 0; i < cardTypes.length; i++){
               if (cardTypes[i] == CardType.COPPER || cardTypes[i] == CardType.SILVER
                   || cardTypes[i] == CardType.GOLD){
