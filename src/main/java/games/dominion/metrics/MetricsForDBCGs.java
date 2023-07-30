@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 import java.util.HashSet;
@@ -85,8 +86,11 @@ public class MetricsForDBCGs {
       indexToType[9] = CardType.SILVER;
       indexToType[10] = CardType.COPPER;
 
-      //set up initial chromosome consisting of 30 copper cards
-      int[] initialGuess = {0,0,0,0,0,0,0,0,3,0,0};
+      //tests
+      //this should give a payout of 5
+      int[] initialGuess = {0, 1, 0, 1, 1, 0, 4, 0, 0, 0, 8};
+      //this should give a payout of 10 - looks like action cards are getting ignored?
+      int[] initialGuess = {1, 1, 0, 0, 0, 1, 0, 2, 0, 5, 0};
 
       //check cost of initial deck
       int cost = deckCost(initialGuess, indexToType);
@@ -103,7 +107,15 @@ public class MetricsForDBCGs {
       Set<int[]> initialPop = genInitialPopulation(totalCost, noIndividuals, indexToType,
           seed, maxIterations);
 
+      //create a map that contains the fitness of each member of the population
+      Map<int[], Double> popFitness = new HashMap<int[], Double>();
+      for ( int[] sample : initialPop){
+          popFitness.put(sample, fitness(sample, indexToType, game, params, noSims));
+      }
+
       //select parents - probability based on fitness function
+      int[] parent1 = drawFromPopulation(popFitness, seed);
+      int[] parent2 = drawFromPopulation(popFitness, 2*seed);
 
       //create crossover offspring that still obeys cost constraint
 
@@ -113,7 +125,30 @@ public class MetricsForDBCGs {
       //fitness function is given by expected deck pay off
       //can I use JGAP package? Not sure I need to....
   }
+  public static int[] drawFromPopulation(Map<int[], Double> populationFitness, long seed){
+      //draw a sample from a population using the relative fitness of each sample
+      //compared ot the whole population
+      Random rnd = new Random(seed);
 
+      //total fitness values across population
+      double totalfitness = 0;
+      for(Map.Entry<int[], Double> entry : populationFitness.entrySet()){
+          totalfitness += entry.getValue();
+      }
+
+      //randomly select a sample from the population
+      for(Map.Entry<int[], Double> entry : populationFitness.entrySet()){
+          double probOfSelection = entry.getValue()/totalfitness;
+          if (rnd.nextFloat() < probOfSelection){
+              return entry.getKey();
+          }
+      }
+
+      //if nothing chosen, just choose a random entry in the map
+      //get list of keys
+      List<int[]> poplist = new ArrayList<int[]>(populationFitness.keySet());
+      return poplist.get(rnd.nextInt(poplist.size()));
+  }
   public static Set<int[]> genInitialPopulation(int costConstraint, int numberOfIndividuals,
       CardType[] cardTypes, long seed, int maxIterations){
       //generate random samples keeping only those that satisfy the cost constraint
