@@ -52,23 +52,15 @@ public class MetricsForDBCGs {
   public static void runMaxPayoffDeckSearch(){
       System.out.println("Search for optimal decks with different cost amounts....");
 
-      //set-up Dominion game and state
-      List<AbstractPlayer> players = Arrays.asList(new MCTSPlayer(), new MCTSPlayer());
-      DominionFGParameters params = new DominionFGParameters(System.currentTimeMillis());
-      DominionGameState state = new DominionGameState(params, players.size());
-      DominionForwardModel fm = new DominionForwardModel();
-      //note creating a game initialises the state
-      Game game = new Game(GameType.Dominion, players, fm, state);
-
       //set-total cost amount
       int totalCost = 30;
-
-      //no of simulations for computing expected deck payoff
-      int noSims = 10;
 
       //A deck will be represented by a chromosome (vector) consisting of a collection
       // of 17 genes which are integers representing the number of cards of a given
       //card type in the deck. Here we are assuming we are using the base collection of cards
+
+      //no of simulations for computing expected deck payoff
+      int noSims = 20;
 
       //set-up vector to  convert chromosome index to card type
       CardType[] indexToType = new CardType[11];
@@ -86,36 +78,23 @@ public class MetricsForDBCGs {
       indexToType[9] = CardType.SILVER;
       indexToType[10] = CardType.COPPER;
 
-      //tests
-      //this should give a payout of 5
-      int[] initialGuess = {0, 1, 0, 1, 1, 0, 4, 0, 0, 0, 8};
-      //this should give a payout of 10 - looks like action cards are getting ignored?
-      int[] initialGuess = {1, 1, 0, 0, 0, 1, 0, 2, 0, 5, 0};
-
-      //check cost of initial deck
-      int cost = deckCost(initialGuess, indexToType);
-
-      //calculate fitness
-      double fitnessResult = fitness(initialGuess, indexToType, game, params, noSims);
-      System.out.printf("Expected Payout: %f", fitnessResult);
-
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
-      int noIndividuals = 100;
+      int noIndividuals = 50;
       long seed = 100;
-      int maxIterations = 1000000;
+      int maxIterations = 100000;
       Set<int[]> initialPop = genInitialPopulation(totalCost, noIndividuals, indexToType,
           seed, maxIterations);
 
       //create a map that contains the fitness of each member of the population
       Map<int[], Double> popFitness = new HashMap<int[], Double>();
       for ( int[] sample : initialPop){
-          popFitness.put(sample, fitness(sample, indexToType, game, params, noSims));
+          popFitness.put(sample, fitness(sample, indexToType, noSims, seed));
       }
 
       //select parents - probability based on fitness function
-      int[] parent1 = drawFromPopulation(popFitness, seed);
-      int[] parent2 = drawFromPopulation(popFitness, 2*seed);
+      int[] parent1 = drawFromPopulation(popFitness, seed*2);
+      int[] parent2 = drawFromPopulation(popFitness, seed*3);
 
       //create crossover offspring that still obeys cost constraint
 
@@ -196,29 +175,31 @@ public class MetricsForDBCGs {
       return cost;
   }
 
-  public static double fitness(int[] deckComposition, CardType[] cardTypes, Game domGame, DominionFGParameters domParams, int noSimulations){
+  public static double fitness(int[] deckComposition, CardType[] cardTypes, int noSimulations, long seed){
       //provides fitness function for deck
       //for now driven by treasures, but could be update to give credit to things like
       //card trashing or automatically gaining a new card etc. They could be translated into
       //an approximate treasure worth
 
-      double result = expectedDeckPayoff(deckComposition, cardTypes, domGame, domParams,noSimulations);
+      double result = expectedDeckPayoff(deckComposition, cardTypes, noSimulations, seed);
 
       return result;
   }
 
-  public static double expectedDeckPayoff(int[] deckComposition, CardType[] cardTypes, Game domGame, DominionFGParameters domParams, int noSimulations)
+  public static double expectedDeckPayoff(int[] deckComposition, CardType[] cardTypes, int noSimulations, long seed)
   {
-      boolean[] notVisibleToEitherPlayer = {false, false};
-      //focus player is the player whose deck we will be evolving
-      DominionGameState state = (DominionGameState) domGame.getGameState();
-      DominionForwardModel fm = (DominionForwardModel) domGame.getForwardModel();
-      List<AbstractPlayer> players = domGame.getPlayers();
-      int focusPlayer = state.getCurrentPlayer();
-      //store a copy of this initial starting state to reset at end of function call
-      DominionGameState initialState = (DominionGameState) state.copy();
+      //set-up Dominion game and state
+      List<AbstractPlayer> players = Arrays.asList(new MCTSPlayer(), new MCTSPlayer());
+      DominionFGParameters params = new DominionFGParameters(seed);
+      DominionGameState state = new DominionGameState(params, players.size());
+      DominionForwardModel fm = new DominionForwardModel();
+      //note creating a game initialises the state
+      Game game = new Game(GameType.Dominion, players, fm, state);
 
       //create player draw deck
+      boolean[] notVisibleToEitherPlayer = {false, false};
+      //focus player is the player whose deck we will be evolving
+      int focusPlayer = state.getCurrentPlayer();
       PartialObservableDeck<DominionCard> draw = new PartialObservableDeck<DominionCard>("player_draw", focusPlayer, notVisibleToEitherPlayer);
       for(int i =0; i < deckComposition.length; i++) {
           for(int j = 0; j < deckComposition[i]; j++){
@@ -232,19 +213,28 @@ public class MetricsForDBCGs {
       PartialObservableDeck<DominionCard> hand = new PartialObservableDeck<DominionCard>("player_hand", focusPlayer, visibleToFocusPlayer);
       state.setDeck(DeckType.HAND,focusPlayer,hand);
 
-      //start by drawing cards into hand
-      for (int i = 0; i < domParams.HAND_SIZE; i++)
-          state.drawCard(focusPlayer);
-
       //store a copy of this starting state for this deck
       DominionGameState startState = (DominionGameState) state.copy();
 
       int noObsOfPayOffs = 0;
       double expectedPayout = 0;
       while(noObsOfPayOffs <= noSimulations){
+          //if start of round shuffle draw deck and draw cards
+          if(state.getGamePhase() == DominionGameState.DominionGamePhase.Play && state.getCurrentPlayer() == focusPlayer &&
+              state.getDeck(DeckType.HAND, focusPlayer).getSize() == 0) {
+            //shuffle draw deck for focus player
+            state.getDeck(DeckType.DRAW, focusPlayer).shuffle(new Random(System.currentTimeMillis()));
+
+            //start by drawing cards into hand
+            for (int i = 0; i < params.HAND_SIZE; i++) {
+              state.drawCard(focusPlayer);
+            }
+          }
           //observe current state
           AbstractGameState observation = state.copy(focusPlayer);
           List<AbstractAction> possibleActions = fm.computeAvailableActions(observation);
+          //TODO: could probably speed this up alot by using a random AI or a small rollout number for MCTS
+          //as the AI just needs to play the existing cards, and not look ahead
           AbstractAction aiAction = players.get(focusPlayer)
               .getAction(observation, possibleActions);
 
@@ -264,9 +254,6 @@ public class MetricsForDBCGs {
               fm.next(state, aiAction);
           }
       }
-      //make sure state is reset
-      state = (DominionGameState) initialState.copy();
-
       //compute final expected payoff
       expectedPayout = expectedPayout/(noObsOfPayOffs*1.0);
 
