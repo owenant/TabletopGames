@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 import java.util.HashSet;
+import java.lang.Math;
 
 import games.dominion.cards.CardType;
 import games.dominion.cards.DominionCard;
@@ -78,6 +79,12 @@ public class MetricsForDBCGs {
       indexToType[9] = CardType.SILVER;
       indexToType[10] = CardType.COPPER;
 
+      //convert to string of ones and zeros
+      int maxNoCardsOfGivenType = 10;
+      int[] test = {1,3,5,0,0,1,6,8,3,0,1};
+      String genotype = convertIntVecToBitGenes(test, maxNoCardsOfGivenType);
+      int[] phenotype = convertBitGenesToIntVec(genotype, maxNoCardsOfGivenType, indexToType.length);
+
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
       int noIndividuals = 50;
@@ -103,6 +110,58 @@ public class MetricsForDBCGs {
       //note: use max entropy for mutations and penalty function for cost constraint.
       //fitness function is given by expected deck pay off
       //can I use JGAP package? Not sure I need to....
+  }
+
+  public static int[] convertBitGenesToIntVec(String genotype, int maxInt, int noOfCardTypes){
+      //convert genotype of ones and zeros back to phenotype, i.e vector of integers
+      //representing number of cards of each type
+
+      //number of bits per integer is dependent on integer upper bound
+      int noBitsPerInt = (int)Math.floor(Math.log(maxInt)/Math.log(2)+1);
+
+      //check genotype is compatible with maxInt constraint
+      if (genotype.length() != noOfCardTypes * noBitsPerInt){
+          System.out.println("Error: incompatible genotype, cant convert to phenotype");
+          return null;
+      }
+
+      //parse genotype in groups of noBitsPerInt bits
+      int[] phenotype = new int[noOfCardTypes];
+      for (int i = 0; i < noOfCardTypes; i++){
+          String singleIntSubString = genotype.substring(i*noBitsPerInt, (i+1)*noBitsPerInt);
+          //convert bits back to integer
+          phenotype[i] = Integer.parseInt(singleIntSubString, 2);
+      }
+
+      return phenotype;
+  }
+  public static String convertIntVecToBitGenes(int[] phenotype, int maxInt){
+      //convert phenotype - i.e. vector of integers representing number of each type of
+      // card in deck to genotype which is a vector of ones and zeros
+
+      //check phenotype is compatible with maxInt constraint
+      for(int i = 0; i < phenotype.length; i++){
+          if (phenotype[i] > maxInt){
+              return "Error - maxInt constraint violated";
+          }
+      }
+
+      //number of bits per integer is dependent on integer upper bound
+      int noBitsPerInt = (int)Math.floor(Math.log(maxInt)/Math.log(2)+1);
+
+      //convert each integer to a sequence of four bits and add to genotype
+      String genotype = "";
+      String allele = "";
+      for(int i = 0; i < phenotype.length; i++){
+          allele = Integer.toBinaryString(phenotype[i]);
+          while(allele.length() < noBitsPerInt){
+              //pad with zeros so we have noBitsPerInt bits for ever integer
+              allele = "0" + allele;
+          }
+          genotype += allele;
+      }
+
+      return genotype;
   }
   public static int[] drawFromPopulation(Map<int[], Double> populationFitness, long seed){
       //draw a sample from a population using the relative fitness of each sample
