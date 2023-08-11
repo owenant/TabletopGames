@@ -81,9 +81,21 @@ public class MetricsForDBCGs {
 
       //convert to string of ones and zeros
       int maxNoCardsOfGivenType = 10;
-      int[] test = {1,3,5,0,0,1,6,8,3,0,1};
-      String genotype = convertIntVecToBitGenes(test, maxNoCardsOfGivenType);
-      int[] phenotype = convertBitGenesToIntVec(genotype, maxNoCardsOfGivenType, indexToType.length);
+      int[] test1 = {1,3,5,0,0,1,6,8,3,0,1};
+      int[] test2 = {0,6,3,7,5,2,4,8,0,3,1};
+      String genotype1 = convertIntVecToBitGenes(test1, maxNoCardsOfGivenType);
+      String genotype2 = convertIntVecToBitGenes(test2, maxNoCardsOfGivenType);
+      int[] phenotype = convertBitGenesToIntVec(genotype1, maxNoCardsOfGivenType, indexToType.length);
+      //create crossover offspring that still obeys cost constraint
+      ArrayList<String> children = crossOver(genotype1, genotype2);
+      int len1 = genotype1.length();
+      int len2 = genotype2.length();
+      int len3 = children.get(0).length();
+      int len4 = children.get(1).length();
+      //create mutated child
+      int seedmut = 32;
+      String mutatedChild = mutation(genotype1, seedmut);
+      int[] mutatedChildPheno = convertBitGenesToIntVec(mutatedChild, maxNoCardsOfGivenType, indexToType.length);
 
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
@@ -103,7 +115,7 @@ public class MetricsForDBCGs {
       int[] parent1 = drawFromPopulation(popFitness, seed*2);
       int[] parent2 = drawFromPopulation(popFitness, seed*3);
 
-      //create crossover offspring that still obeys cost constraint
+      //create cross-over
 
       //apply max entropy mutation
 
@@ -112,6 +124,36 @@ public class MetricsForDBCGs {
       //can I use JGAP package? Not sure I need to....
   }
 
+  public static String mutation(String parent, long seed){
+      //randomly flip a bit in parent to produce a child
+      Random rnd = new Random(seed);
+      int rndIndex = rnd.nextInt(parent.length());
+
+      String child = new String();
+      if(parent.charAt(rndIndex) == '0'){
+          child = parent.substring(0,rndIndex) + '1' + parent.substring(rndIndex+1, parent.length());
+      }else{
+          child = parent.substring(0,rndIndex) + '0' + parent.substring(rndIndex+1, parent.length());
+      }
+
+      return child;
+  }
+
+  public static ArrayList<String> crossOver(String parent1, String parent2){
+      //cross-over genes of two parents to make two new off spring
+
+      //we split both genotypes down the middle and create new off spring
+      int midPoint = (int)Math.floor(parent1.length()/2);
+      String child1 = parent1.substring(0,midPoint) + parent2.substring(midPoint, parent2.length());
+      String child2 = parent2.substring(0,midPoint) + parent1.substring(midPoint, parent1.length());
+
+      ArrayList<String> children = new ArrayList<String>();
+      children.add(child1);
+      children.add(child2);
+
+      return children;
+
+  }
   public static int[] convertBitGenesToIntVec(String genotype, int maxInt, int noOfCardTypes){
       //convert genotype of ones and zeros back to phenotype, i.e vector of integers
       //representing number of cards of each type
@@ -289,6 +331,7 @@ public class MetricsForDBCGs {
               state.drawCard(focusPlayer);
             }
           }
+
           //observe current state
           AbstractGameState observation = state.copy(focusPlayer);
           List<AbstractAction> possibleActions = fm.computeAvailableActions(observation);
