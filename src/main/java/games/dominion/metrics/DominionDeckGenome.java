@@ -23,9 +23,9 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
   private int[] phenotype;
   private double fitness;
   private boolean fitnessCalculated;
-  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 10;
+  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
   public static int NO_SIMULATIONS_EXPPAYOFF = 10;
-  public static int COST_CONSTRAINT = 30;
+  public static int COST_CONSTRAINT = 120;
   public static CardType[] CARD_TYPES = {CardType.CELLAR, CardType.MARKET, CardType.MERCHANT,CardType.MILITIA,
       CardType.MINE,CardType.MOAT,CardType.SMITHY,CardType.VILLAGE,CardType.GOLD,
       CardType.SILVER, CardType.COPPER};
@@ -72,7 +72,7 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     int noBitsPerInt = (int)Math.floor(Math.log(MAX_NO_OF_CARDS_OF_ANY_TYPE)/Math.log(2)+1);
 
     //convert each integer to a sequence of four bits and add to genotype
-    String genotype = new String();
+    genotype = new String();
     String allele = new String();
     for(int i = 0; i < phenotype.length; i++){
       allele = Integer.toBinaryString(phenotype[i]);
@@ -86,7 +86,7 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     fitnessCalculated = false;
   }
   public double getFitness(){
-    if (fitnessCalculated = false){
+    if (fitnessCalculated == false){
       fitness = calcFitness();
       fitnessCalculated = true;
     }
@@ -113,12 +113,13 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     //an approximate treasure worth
 
     //check to see if genotype is compatible with cost constraint
+    Random rnd = new Random(System.currentTimeMillis());
     if (getCost() != COST_CONSTRAINT){
       return 0;
     }else {
       //set-up Dominion game and state
       List<AbstractPlayer> players = Arrays.asList(new MCTSPlayer(), new MCTSPlayer());
-      DominionFGParameters params = new DominionFGParameters();
+      DominionFGParameters params = new DominionFGParameters(rnd.nextInt());
       DominionGameState state = new DominionGameState(params, players.size());
       DominionForwardModel fm = new DominionForwardModel();
       //note creating a game initialises the state
@@ -205,8 +206,8 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     String child2 = parent2.genotype.substring(0,midPoint) + parent1.genotype.substring(midPoint, parent1.genotype.length());
 
     ArrayList<DominionDeckGenome> children = new ArrayList<DominionDeckGenome>();
-    children.add(DominionDeckGenome(child1));
-    children.add(DominionDeckGenome(child2));
+    children.add(new DominionDeckGenome(child1));
+    children.add(new DominionDeckGenome(child2));
 
     return children;
   }
@@ -217,9 +218,9 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
 
     String newGenotype = new String();
     if(genome.genotype.charAt(rndIndex) == '0'){
-      newGenotype = genome.genotype.substring(0,rndIndex) + '1' + genome.genotype.substring(rndIndex+1, genotype.length());
+      newGenotype = genome.genotype.substring(0,rndIndex) + '1' + genome.genotype.substring(rndIndex+1, genome.genotype.length());
     }else{
-      newGenotype = genome.genotype.substring(0,rndIndex) + '0' + genome.genotype.substring(rndIndex+1, genotype.length());
+      newGenotype = genome.genotype.substring(0,rndIndex) + '0' + genome.genotype.substring(rndIndex+1, genome.genotype.length());
     }
 
     return new DominionDeckGenome(newGenotype);

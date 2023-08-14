@@ -39,6 +39,7 @@ import players.mcts.MCTSPlayer;
 import players.rmhc.RMHCPlayer;
 import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
+import java.util.Collections;
 
 //entry point for metric calculations for DBCGs. Currently focused on Dominion
 //note tests for dominion might help in building functionality in here
@@ -63,7 +64,7 @@ public class MetricsForDBCGs {
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
       int noIndividuals = 50;
-      int maxIterations = 100000;
+      int maxIterations = 1000000;
       long seed = 100;
       ArrayList<DominionDeckGenome> parents = genInitialPopulation(noIndividuals, maxIterations, seed);
 
@@ -71,7 +72,9 @@ public class MetricsForDBCGs {
       Random rnd = new Random(System.currentTimeMillis());
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      while (){
+      int noGenerations = 10;
+      int Counter = 0;
+      while (Counter < noGenerations){
           ArrayList<DominionDeckGenome> children = new ArrayList<DominionDeckGenome>();
           for( int pair = 0; pair < (int)Math.floor(parents.size()/2); pair++ ) {
               //draw pairs of individuals randomly from the population
@@ -104,16 +107,18 @@ public class MetricsForDBCGs {
           }
 
           //sort population by fitness
-
+          Collections.sort(parents);
 
           //and take the top noIndividuals in terms of fitness as the new population
+          parents = (ArrayList<DominionDeckGenome>)parents.subList(0,noIndividuals);
 
+          //output size of next generation population and fitness of fittest individual
+          DominionDeckGenome fittestGenome = parents.get(0);
+          System.out.println("Fittest Genome: " + fittestGenome.getFitness());
+          System.out.println("No of individuals remaining in population: " + parents.size());
 
-          //examine fitessed individual out of new population and compare to termination
-          //condition
-
-          //check size of next generation population
-
+          //increase generation counter
+          Counter++;
       }
   }
 
