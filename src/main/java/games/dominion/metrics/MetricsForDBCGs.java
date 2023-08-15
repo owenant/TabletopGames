@@ -63,13 +63,14 @@ public class MetricsForDBCGs {
 
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
-      int noIndividuals = 50;
+      int noIndividuals = 10;
       int maxIterations = 1000000;
       long seed = 100;
       ArrayList<DominionDeckGenome> parents = genInitialPopulation(noIndividuals, maxIterations, seed);
 
       //start loop to evolve population, finish when termination condition is achieved
-      Random rnd = new Random(System.currentTimeMillis());
+      //Random rnd = new Random(System.currentTimeMillis());
+      Random rnd = new Random(100);
       double probCrossOver = 0.8;
       double probMutation = 0.05;
       int noGenerations = 10;
@@ -103,14 +104,25 @@ public class MetricsForDBCGs {
 
           //once child population is complete combine with previous population to generate next generation
           for (DominionDeckGenome child : children){
+              //make sure to compute fitness for each child before adding to parents list
+              child.getFitness();
               parents.add(child);
           }
 
           //sort population by fitness
           Collections.sort(parents);
 
-          //and take the top noIndividuals in terms of fitness as the new population
-          parents = (ArrayList<DominionDeckGenome>)parents.subList(0,noIndividuals);
+          //next generation
+          ArrayList<DominionDeckGenome> nextGen = new ArrayList<DominionDeckGenome>();
+          for(int i = 1; i <= noIndividuals; i++){
+              nextGen.add(parents.get(parents.size()-i));
+          }
+
+          //reset parent list to new generation
+          parents.clear();
+          for (int i = 0; i < nextGen.size(); i++){
+              parents.add(nextGen.get(i));
+          }
 
           //output size of next generation population and fitness of fittest individual
           DominionDeckGenome fittestGenome = parents.get(0);
@@ -125,7 +137,8 @@ public class MetricsForDBCGs {
   public static DominionDeckGenome drawFromPopulation(ArrayList<DominionDeckGenome> population){
       //draw a sample from a population using the relative fitness of each sample
       //compared ot the whole population
-      Random rnd = new Random(System.currentTimeMillis());
+      //Random rnd = new Random(System.currentTimeMillis());
+      Random rnd = new Random(100);
 
       //total fitness values across population
       double totalfitness = 0;
@@ -159,7 +172,8 @@ public class MetricsForDBCGs {
               deck[i] = rnd.nextInt(DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE);
           }
           DominionDeckGenome genome = new DominionDeckGenome(deck);
-          if(genome.getCost() == DominionDeckGenome.COST_CONSTRAINT){
+          int cost = genome.getCost();
+          if(cost == DominionDeckGenome.COST_CONSTRAINT){
               pop.add(genome);
               noOfSamplesGenerated += 1;
           }

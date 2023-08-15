@@ -23,9 +23,9 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
   private int[] phenotype;
   private double fitness;
   private boolean fitnessCalculated;
-  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
-  public static int NO_SIMULATIONS_EXPPAYOFF = 10;
-  public static int COST_CONSTRAINT = 120;
+  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 2;
+  public static int NO_SIMULATIONS_EXPPAYOFF = 5;
+  public static int COST_CONSTRAINT = 29;
   public static CardType[] CARD_TYPES = {CardType.CELLAR, CardType.MARKET, CardType.MERCHANT,CardType.MILITIA,
       CardType.MINE,CardType.MOAT,CardType.SMITHY,CardType.VILLAGE,CardType.GOLD,
       CardType.SILVER, CardType.COPPER};
@@ -113,7 +113,8 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     //an approximate treasure worth
 
     //check to see if genotype is compatible with cost constraint
-    Random rnd = new Random(System.currentTimeMillis());
+    //Random rnd = new Random(System.currentTimeMillis());
+    Random rnd = new Random(100);
     if (getCost() != COST_CONSTRAINT){
       return 0;
     }else {
@@ -152,7 +153,8 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
         if(state.getGamePhase() == DominionGameState.DominionGamePhase.Play && state.getCurrentPlayer() == focusPlayer &&
             state.getDeck(DeckType.HAND, focusPlayer).getSize() == 0) {
           //shuffle draw deck for focus player
-          state.getDeck(DeckType.DRAW, focusPlayer).shuffle(new Random(System.currentTimeMillis()));
+          //state.getDeck(DeckType.DRAW, focusPlayer).shuffle(new Random(System.currentTimeMillis()));
+          state.getDeck(DeckType.DRAW, focusPlayer).shuffle(new Random(100));
 
           //start by drawing cards into hand
           for (int i = 0; i < params.HAND_SIZE; i++) {
@@ -213,7 +215,8 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
   }
   public static DominionDeckGenome mutate(DominionDeckGenome genome){
     //randomly flip a bit in genotype and return a new genome
-    Random rnd = new Random(System.currentTimeMillis());
+    //Random rnd = new Random(System.currentTimeMillis());
+    Random rnd = new Random(100);
     int rndIndex = rnd.nextInt(genome.genotype.length());
 
     String newGenotype = new String();
