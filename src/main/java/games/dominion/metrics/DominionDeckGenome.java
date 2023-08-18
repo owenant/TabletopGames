@@ -5,6 +5,7 @@ import core.AbstractPlayer;
 import core.Game;
 import core.actions.AbstractAction;
 import core.components.PartialObservableDeck;
+import core.components.Deck;
 import games.GameType;
 import games.dominion.DominionConstants.DeckType;
 import games.dominion.DominionFGParameters;
@@ -17,15 +18,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import players.mcts.MCTSPlayer;
+import players.simple.RandomPlayer;
 
 public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
   private String genotype;
   private int[] phenotype;
   private double fitness;
   private boolean fitnessCalculated;
-  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 2;
-  public static int NO_SIMULATIONS_EXPPAYOFF = 5;
-  public static int COST_CONSTRAINT = 29;
+  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
+  public static int NO_SIMULATIONS_EXPPAYOFF = 10;
+  public static int MAX_COST_CONSTRAINT = 80;
+  public static int MIN_COST_CONSTRAINT = 60;
   public static CardType[] CARD_TYPES = {CardType.CELLAR, CardType.MARKET, CardType.MERCHANT,CardType.MILITIA,
       CardType.MINE,CardType.MOAT,CardType.SMITHY,CardType.VILLAGE,CardType.GOLD,
       CardType.SILVER, CardType.COPPER};
@@ -97,6 +100,23 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     return genotype;
   }
 
+  public int[] getPhenotype(){
+    return phenotype;
+  }
+
+  public String convertPhenoToString(){
+    //convert phenotype int[] to string, helps with displaying results
+    String pheno = "[";
+    for(int i = 0; i < phenotype.length; i++){
+      if(i == (phenotype.length-1)){
+        pheno+= phenotype[i] + "]";
+      }else{
+        pheno+= phenotype[i] + ",";
+      }
+    }
+    return pheno;
+  }
+
   public int compareTo(DominionDeckGenome otherGenome){
     if (fitness > otherGenome.fitness){
       return 1;
@@ -113,14 +133,20 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     //an approximate treasure worth
 
     //check to see if genotype is compatible with cost constraint
-    //Random rnd = new Random(System.currentTimeMillis());
-    Random rnd = new Random(100);
-    if (getCost() != COST_CONSTRAINT){
+    int deckCost = getCost();
+    if (deckCost >= MAX_COST_CONSTRAINT || deckCost <= MIN_COST_CONSTRAINT){
       return 0;
     }else {
+      //long startTime = System.currentTimeMillis();
+
       //set-up Dominion game and state
-      List<AbstractPlayer> players = Arrays.asList(new MCTSPlayer(), new MCTSPlayer());
-      DominionFGParameters params = new DominionFGParameters(rnd.nextInt());
+
+      //start by setting up MCTS player which will be used to play the deck
+      //parameters need to be chosen here so that the cards are played in an
+      //optimal order but we also dont need to see impact of future turns
+      AbstractPlayer focusAIAgent = new MCTSPlayer();
+      List<AbstractPlayer> players = Arrays.asList(focusAIAgent, new RandomPlayer());
+      DominionFGParameters params = new DominionFGParameters(new Random(System.currentTimeMillis()).nextInt());
       DominionGameState state = new DominionGameState(params, players.size());
       DominionForwardModel fm = new DominionForwardModel();
       //note creating a game initialises the state
@@ -153,8 +179,7 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
         if(state.getGamePhase() == DominionGameState.DominionGamePhase.Play && state.getCurrentPlayer() == focusPlayer &&
             state.getDeck(DeckType.HAND, focusPlayer).getSize() == 0) {
           //shuffle draw deck for focus player
-          //state.getDeck(DeckType.DRAW, focusPlayer).shuffle(new Random(System.currentTimeMillis()));
-          state.getDeck(DeckType.DRAW, focusPlayer).shuffle(new Random(100));
+          state.getDeck(DeckType.DRAW, focusPlayer).shuffle(new Random(System.currentTimeMillis()));
 
           //start by drawing cards into hand
           for (int i = 0; i < params.HAND_SIZE; i++) {
@@ -162,12 +187,11 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
           }
         }
 
-        //observe current state
-        AbstractGameState observation = state.copy(focusPlayer);
+        //compute next action for current player
+        int currentPlayer = state.getCurrentPlayer();
+        AbstractGameState observation = state.copy(currentPlayer);
         List<AbstractAction> possibleActions = fm.computeAvailableActions(observation);
-        //TODO: could probably speed this up alot by using a random AI or a small rollout number for MCTS
-        //as the AI just needs to play the existing cards, and not look ahead
-        AbstractAction aiAction = players.get(focusPlayer)
+        AbstractAction aiAction = players.get(currentPlayer)
             .getAction(observation, possibleActions);
 
         //if in buy phase for focus player figure out what the payoff was
@@ -175,6 +199,7 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
           //grab total treasure value
           int payout = state.availableSpend(focusPlayer);
           expectedPayout += payout;
+          //System.out.println(payout);
 
           //reset state, ready to repeat
           state = (DominionGameState) startState.copy();

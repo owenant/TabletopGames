@@ -49,33 +49,57 @@ public class MetricsForDBCGs {
       System.out.println("Entry point to metrics for DBCGs....");
       //runTournament();
       runMaxPayoffDeckSearch();
+      //testing();
+  }
+  public static void testing(){
+      //testing no of simulations for expected payoff
+      long startTime = System.currentTimeMillis();
+
+      int[] pheno = {3,1,2,1,4,1,1,0,2,1,3};
+      DominionDeckGenome genomeTest = new DominionDeckGenome(pheno);
+      System.out.println(genomeTest.getCost());
+      System.out.println(genomeTest.getFitness());
+
+      long elapsedTime = System.currentTimeMillis() - startTime;
+      long elapsedSeconds = elapsedTime / 1000;
+      long elapsedMinutes = elapsedSeconds / 60;
+      System.out.printf("Fitness for test genome computed in %d minutes and %d seconds: ", elapsedMinutes, elapsedSeconds);
+      return;
   }
 
   public static void runMaxPayoffDeckSearch(){
       System.out.println("Search for optimal decks with different cost amounts....");
 
-      //set-total cost amount
-      int totalCost = 30;
-
-      //A deck will be represented by a chromosome (vector) consisting of a collection
-      // of 17 genes which are integers representing the number of cards of a given
-      //card type in the deck. Here we are assuming we are using the base collection of cards
-
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
-      int noIndividuals = 10;
+      int noIndividuals = 100;
       int maxIterations = 1000000;
       long seed = 100;
       ArrayList<DominionDeckGenome> parents = genInitialPopulation(noIndividuals, maxIterations, seed);
+      System.out.println("Initial population size: " + parents.size());
+
+      //calculate fitness for initial population
+      System.out.println("Computing fitness of initial population...");
+      long startTime = System.currentTimeMillis();
+      for (DominionDeckGenome genome : parents) {
+          //make sure to compute fitness for each child before adding to parents list
+          genome.getFitness();
+      }
+      long elapsedTime = System.currentTimeMillis() - startTime;
+      long elapsedSeconds = elapsedTime / 1000;
+      long elapsedMinutes = elapsedSeconds / 60;
+      System.out.printf("Fitness for initial population computed in %d minutes and %d seconds: ", elapsedMinutes, elapsedSeconds);
+      System.out.println("");
 
       //start loop to evolve population, finish when termination condition is achieved
-      //Random rnd = new Random(System.currentTimeMillis());
-      Random rnd = new Random(100);
+      Random rnd = new Random(System.currentTimeMillis());
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 10;
+      int noGenerations = 100;
       int Counter = 0;
+      startTime = System.currentTimeMillis();
       while (Counter < noGenerations){
+          int noFeasibleChildrenInGeneration = 0;
           ArrayList<DominionDeckGenome> children = new ArrayList<DominionDeckGenome>();
           for( int pair = 0; pair < (int)Math.floor(parents.size()/2); pair++ ) {
               //draw pairs of individuals randomly from the population
@@ -97,6 +121,7 @@ public class MetricsForDBCGs {
               if(rnd.nextFloat() < probMutation){
                   child2 = DominionDeckGenome.mutate(child2);
               }
+
               //add to child population
               children.add(child1);
               children.add(child2);
@@ -106,7 +131,12 @@ public class MetricsForDBCGs {
           for (DominionDeckGenome child : children){
               //make sure to compute fitness for each child before adding to parents list
               child.getFitness();
-              parents.add(child);
+              //check if children satisfy cost constraint
+              int deckCost = child.getCost();
+              if (deckCost <= DominionDeckGenome.MAX_COST_CONSTRAINT && deckCost >= DominionDeckGenome.MIN_COST_CONSTRAINT) {
+                noFeasibleChildrenInGeneration++;
+                parents.add(child);
+              }
           }
 
           //sort population by fitness
@@ -126,19 +156,27 @@ public class MetricsForDBCGs {
 
           //output size of next generation population and fitness of fittest individual
           DominionDeckGenome fittestGenome = parents.get(0);
-          System.out.println("Fittest Genome: " + fittestGenome.getFitness());
+          System.out.println("Generation: " + Counter);
+          System.out.println("Fittest Deck: " + fittestGenome.convertPhenoToString());
+          System.out.println("Fitness: " + fittestGenome.getFitness());
+          System.out.println("Deck Cost: " + fittestGenome.getCost());
           System.out.println("No of individuals remaining in population: " + parents.size());
+          System.out.println("No of feasible children generated this generation: " + noFeasibleChildrenInGeneration);
 
           //increase generation counter
           Counter++;
       }
+
+      elapsedTime = System.currentTimeMillis() - startTime;
+      elapsedSeconds = elapsedTime / 1000;
+      elapsedMinutes = elapsedSeconds / 60;
+      System.out.printf("Genetic algorithm completed in %d minutes and %d seconds", elapsedMinutes, elapsedSeconds);
   }
 
   public static DominionDeckGenome drawFromPopulation(ArrayList<DominionDeckGenome> population){
       //draw a sample from a population using the relative fitness of each sample
       //compared ot the whole population
-      //Random rnd = new Random(System.currentTimeMillis());
-      Random rnd = new Random(100);
+      Random rnd = new Random(System.currentTimeMillis());
 
       //total fitness values across population
       double totalfitness = 0;
@@ -173,7 +211,7 @@ public class MetricsForDBCGs {
           }
           DominionDeckGenome genome = new DominionDeckGenome(deck);
           int cost = genome.getCost();
-          if(cost == DominionDeckGenome.COST_CONSTRAINT){
+          if(cost <= DominionDeckGenome.MAX_COST_CONSTRAINT && cost >= DominionDeckGenome.MIN_COST_CONSTRAINT){
               pop.add(genome);
               noOfSamplesGenerated += 1;
           }
