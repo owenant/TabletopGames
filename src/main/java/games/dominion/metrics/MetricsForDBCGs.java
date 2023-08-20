@@ -1,43 +1,19 @@
 package games.dominion.metrics;
 
 import static games.GameType.Dominion;
-import static utilities.Utils.getArg;
-
-import core.AbstractGameState;
-import core.AbstractParameters;
 import core.AbstractPlayer;
-import core.Game;
-import core.actions.AbstractAction;
-import core.components.Deck;
-import core.CoreConstants;
-import core.components.PartialObservableDeck;
 import evaluation.listeners.IGameListener;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
-import games.dominion.DominionConstants;
 import games.dominion.DominionFGParameters;
-import games.dominion.DominionForwardModel;
-import games.dominion.DominionGameState;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Random;
-import java.util.Set;
-import java.util.HashSet;
 import java.lang.Math;
-
-import games.dominion.cards.CardType;
-import games.dominion.cards.DominionCard;
-import games.dominion.DominionConstants.DeckType;
-import players.PlayerFactory;
-import players.mcts.BasicMCTSPlayer;
-import players.mcts.MCTSPlayer;
-import players.rmhc.RMHCPlayer;
-import players.simple.OSLAPlayer;
+import java.io.File;
+import java.io.FileWriter;
 import players.simple.RandomPlayer;
 import java.util.Collections;
 
@@ -68,14 +44,24 @@ public class MetricsForDBCGs {
   }
 
   public static void runMaxPayoffDeckSearch(){
+      //set-up output file
+      String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/GeneticAlgorithm/GAResults";
+      File csvFile = new File(filename);
+      FileWriter fileWriter;
+
+      //parameters
+      int noIndividuals = 5;
+      int maxIterations = 10000;
+      long initialPopSeed = 100;
+      double probCrossOver = 0.8;
+      double probMutation = 0.05;
+      int noGenerations = 3;
+
       System.out.println("Search for optimal decks with different cost amounts....");
 
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
-      int noIndividuals = 100;
-      int maxIterations = 1000000;
-      long seed = 100;
-      ArrayList<DominionDeckGenome> parents = genInitialPopulation(noIndividuals, maxIterations, seed);
+      ArrayList<DominionDeckGenome> parents = genInitialPopulation(noIndividuals, maxIterations, initialPopSeed);
       System.out.println("Initial population size: " + parents.size());
 
       //calculate fitness for initial population
@@ -91,15 +77,28 @@ public class MetricsForDBCGs {
       System.out.printf("Fitness for initial population computed in %d minutes and %d seconds: ", elapsedMinutes, elapsedSeconds);
       System.out.println("");
 
+      //start building report file
+      StringBuilder line = new StringBuilder();
+      line.append("No of individuals in initial population: " + parents.size() + "\n");
+      line.append("Max cost constraint: " + DominionDeckGenome.MAX_COST_CONSTRAINT + "\n");
+      line.append("Min cost constraint: " + DominionDeckGenome.MIN_COST_CONSTRAINT + "\n");
+      line.append("Min cost constraint: " + DominionDeckGenome.MIN_COST_CONSTRAINT + "\n");
+      //TODO: have different max cards for action vs treasury
+      line.append("Max number of cards of any type: " + DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE + "\n");
+      line.append("Probability of cross-over: " + probCrossOver + "\n");
+      line.append("Probability of mutation: " + probMutation + "\n");
+      line.append("No of sims in expected payoff calculation: " + DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF + "\n");
+      line.append("Number of generations: " + noGenerations + "\n");
+      line.append("Generation, Fittest Deck, Fitness, Deck Cost, Population size, No feasible children produced, No of cross-overs, No of mutations\n");
+
       //start loop to evolve population, finish when termination condition is achieved
       Random rnd = new Random(System.currentTimeMillis());
-      double probCrossOver = 0.8;
-      double probMutation = 0.05;
-      int noGenerations = 100;
       int Counter = 0;
       startTime = System.currentTimeMillis();
       while (Counter < noGenerations){
           int noFeasibleChildrenInGeneration = 0;
+          int noMutations = 0;
+          int noCrossOvers = 0;
           ArrayList<DominionDeckGenome> children = new ArrayList<DominionDeckGenome>();
           for( int pair = 0; pair < (int)Math.floor(parents.size()/2); pair++ ) {
               //draw pairs of individuals randomly from the population
@@ -113,13 +112,16 @@ public class MetricsForDBCGs {
                   ArrayList<DominionDeckGenome> childList = DominionDeckGenome.crossOver(parent1, parent2);
                   child1 = childList.get(0);
                   child2 = childList.get(1);
+                  noCrossOvers++;
               }
               //mutate each new child with probability probMutation
               if(rnd.nextFloat() < probMutation){
                   child1 = DominionDeckGenome.mutate(child1);
+                  noMutations++;
               }
               if(rnd.nextFloat() < probMutation){
                   child2 = DominionDeckGenome.mutate(child2);
+                  noMutations++;
               }
 
               //add to child population
@@ -156,13 +158,19 @@ public class MetricsForDBCGs {
 
           //output size of next generation population and fitness of fittest individual
           DominionDeckGenome fittestGenome = parents.get(0);
+          int deckCost = fittestGenome.getCost();
           System.out.println("Generation: " + Counter);
           System.out.println("Fittest Deck: " + fittestGenome.convertPhenoToString());
           System.out.println("Fitness: " + fittestGenome.getFitness());
-          System.out.println("Deck Cost: " + fittestGenome.getCost());
+          System.out.println("Deck Cost: " + deckCost);
           System.out.println("No of individuals remaining in population: " + parents.size());
           System.out.println("No of feasible children generated this generation: " + noFeasibleChildrenInGeneration);
+          System.out.println("No of cross-overs this generation: " + noCrossOvers);
+          System.out.println("No of mutations this generation: " + noMutations);
 
+          //create line for report file
+          line.append(Counter + "," + fittestGenome.convertPhenoToString() + "," + fittestGenome.getFitness() + "," + deckCost
+                      + "," + parents.size() + "," + noFeasibleChildrenInGeneration+ "," + noCrossOvers + "," + noMutations + "\n");
           //increase generation counter
           Counter++;
       }
@@ -171,6 +179,15 @@ public class MetricsForDBCGs {
       elapsedSeconds = elapsedTime / 1000;
       elapsedMinutes = elapsedSeconds / 60;
       System.out.printf("Genetic algorithm completed in %d minutes and %d seconds", elapsedMinutes, elapsedSeconds);
+
+      //output results to file
+      try {
+          fileWriter = new FileWriter(csvFile);
+          fileWriter.write(line.toString());
+          fileWriter.close();
+      }catch(Exception e){
+          System.out.println("Error opening file for GA results");
+      }
   }
 
   public static DominionDeckGenome drawFromPopulation(ArrayList<DominionDeckGenome> population){
