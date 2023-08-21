@@ -50,24 +50,25 @@ public class MetricsForDBCGs {
       FileWriter fileWriter;
 
       //parameters
-      int noIndividuals = 5;
+      int noIndividuals = 100;
       int maxIterations = 10000;
       long initialPopSeed = 100;
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 3;
+      int noGenerations = 250;
+      int maxChildCreationAttemptsPriorToFailure = 10;
 
       System.out.println("Search for optimal decks with different cost amounts....");
 
       //create initial population at random filtering out those that dont satisfy
       //the cost constraints
-      ArrayList<DominionDeckGenome> parents = genInitialPopulation(noIndividuals, maxIterations, initialPopSeed);
-      System.out.println("Initial population size: " + parents.size());
+      ArrayList<DominionDeckGenome> population = genInitialPopulation(noIndividuals, maxIterations, initialPopSeed);
+      System.out.println("Initial population size: " + population.size());
 
       //calculate fitness for initial population
       System.out.println("Computing fitness of initial population...");
       long startTime = System.currentTimeMillis();
-      for (DominionDeckGenome genome : parents) {
+      for (DominionDeckGenome genome : population) {
           //make sure to compute fitness for each child before adding to parents list
           genome.getFitness();
       }
@@ -79,7 +80,7 @@ public class MetricsForDBCGs {
 
       //start building report file
       StringBuilder line = new StringBuilder();
-      line.append("No of individuals in initial population: " + parents.size() + "\n");
+      line.append("No of individuals in initial population: " + population.size() + "\n");
       line.append("Max cost constraint: " + DominionDeckGenome.MAX_COST_CONSTRAINT + "\n");
       line.append("Min cost constraint: " + DominionDeckGenome.MIN_COST_CONSTRAINT + "\n");
       line.append("Min cost constraint: " + DominionDeckGenome.MIN_COST_CONSTRAINT + "\n");
@@ -89,6 +90,7 @@ public class MetricsForDBCGs {
       line.append("Probability of mutation: " + probMutation + "\n");
       line.append("No of sims in expected payoff calculation: " + DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF + "\n");
       line.append("Number of generations: " + noGenerations + "\n");
+      line.append("No of cycles of child generation before breaking: " + maxChildCreationAttemptsPriorToFailure + "\n");
       line.append("Generation, Fittest Deck, Fitness, Deck Cost, Population size, No feasible children produced, No of cross-overs, No of mutations\n");
 
       //start loop to evolve population, finish when termination condition is achieved
@@ -97,80 +99,93 @@ public class MetricsForDBCGs {
       startTime = System.currentTimeMillis();
       while (Counter < noGenerations){
           int noFeasibleChildrenInGeneration = 0;
+          int childCreationCycles = 0;
           int noMutations = 0;
           int noCrossOvers = 0;
           ArrayList<DominionDeckGenome> children = new ArrayList<DominionDeckGenome>();
-          for( int pair = 0; pair < (int)Math.floor(parents.size()/2); pair++ ) {
-              //draw pairs of individuals randomly from the population
-              DominionDeckGenome parent1 = drawFromPopulation(parents);
-              DominionDeckGenome parent2 = drawFromPopulation(parents);
+          while(noFeasibleChildrenInGeneration < 1 || childCreationCycles <= maxChildCreationAttemptsPriorToFailure) {
+              noMutations = 0;
+              noCrossOvers = 0;
+              for (int pair = 0; pair < (int) Math.floor(population.size() / 2.0); pair++) {
+                  //draw pairs of individuals randomly from the population
+                  DominionDeckGenome parent1 = drawFromPopulation(population);
+                  DominionDeckGenome parent2 = drawFromPopulation(population);
 
-              //cross-over pairs with a probability probCrossOver
-              DominionDeckGenome child1 = new DominionDeckGenome(parent1.getGenotype());
-              DominionDeckGenome child2 = new DominionDeckGenome(parent2.getGenotype());
-              if (rnd.nextFloat() < probCrossOver){
-                  ArrayList<DominionDeckGenome> childList = DominionDeckGenome.crossOver(parent1, parent2);
-                  child1 = childList.get(0);
-                  child2 = childList.get(1);
-                  noCrossOvers++;
-              }
-              //mutate each new child with probability probMutation
-              if(rnd.nextFloat() < probMutation){
-                  child1 = DominionDeckGenome.mutate(child1);
-                  noMutations++;
-              }
-              if(rnd.nextFloat() < probMutation){
-                  child2 = DominionDeckGenome.mutate(child2);
-                  noMutations++;
-              }
+                  //cross-over pairs with a probability probCrossOver
+                  DominionDeckGenome child1 = new DominionDeckGenome(parent1.getGenotype());
+                  DominionDeckGenome child2 = new DominionDeckGenome(parent2.getGenotype());
+                  if (rnd.nextFloat() < probCrossOver) {
+                      ArrayList<DominionDeckGenome> childList = DominionDeckGenome.crossOver(
+                          parent1, parent2);
+                      child1 = childList.get(0);
+                      child2 = childList.get(1);
+                      noCrossOvers++;
+                  }
+                  //mutate each new child with probability probMutation
+                  if (rnd.nextFloat() < probMutation) {
+                      child1 = DominionDeckGenome.mutate(child1);
+                      noMutations++;
+                  }
+                  if (rnd.nextFloat() < probMutation) {
+                      child2 = DominionDeckGenome.mutate(child2);
+                      noMutations++;
+                  }
 
-              //add to child population
-              children.add(child1);
-              children.add(child2);
-          }
+                  //check if child satisfies cost constraint and if so add to population
+                  if (!child1.getGenotype().equals(parent1.getGenotype())) {
+                      int deckCost1 = child1.getCost();
+                      if (deckCost1 <= DominionDeckGenome.MAX_COST_CONSTRAINT
+                          && deckCost1 >= DominionDeckGenome.MIN_COST_CONSTRAINT) {
+                          noFeasibleChildrenInGeneration++;
+                          child1.getFitness();
+                          population.add(child1);
+                      }
+                  }
+                  if (!child2.getGenotype().equals(parent2.getGenotype())) {
+                      int deckCost2 = child2.getCost();
+                      if (deckCost2 <= DominionDeckGenome.MAX_COST_CONSTRAINT
+                          && deckCost2 >= DominionDeckGenome.MIN_COST_CONSTRAINT) {
+                          noFeasibleChildrenInGeneration++;
+                          child2.getFitness();
+                          population.add(child2);
+                      }
+                  }
 
-          //once child population is complete combine with previous population to generate next generation
-          for (DominionDeckGenome child : children){
-              //make sure to compute fitness for each child before adding to parents list
-              child.getFitness();
-              //check if children satisfy cost constraint
-              int deckCost = child.getCost();
-              if (deckCost <= DominionDeckGenome.MAX_COST_CONSTRAINT && deckCost >= DominionDeckGenome.MIN_COST_CONSTRAINT) {
-                noFeasibleChildrenInGeneration++;
-                parents.add(child);
+                  //track number of times attempted to create children
+                  childCreationCycles++;
               }
           }
 
           //sort population by fitness
-          Collections.sort(parents);
+          Collections.sort(population);
 
           //next generation
           ArrayList<DominionDeckGenome> nextGen = new ArrayList<DominionDeckGenome>();
           for(int i = 1; i <= noIndividuals; i++){
-              nextGen.add(parents.get(parents.size()-i));
+              nextGen.add(population.get(population.size()-i));
           }
 
-          //reset parent list to new generation
-          parents.clear();
+          //reset population list to new generation
+          population.clear();
           for (int i = 0; i < nextGen.size(); i++){
-              parents.add(nextGen.get(i));
+              population.add(nextGen.get(i));
           }
 
           //output size of next generation population and fitness of fittest individual
-          DominionDeckGenome fittestGenome = parents.get(0);
+          DominionDeckGenome fittestGenome = population.get(0);
           int deckCost = fittestGenome.getCost();
           System.out.println("Generation: " + Counter);
           System.out.println("Fittest Deck: " + fittestGenome.convertPhenoToString());
           System.out.println("Fitness: " + fittestGenome.getFitness());
           System.out.println("Deck Cost: " + deckCost);
-          System.out.println("No of individuals remaining in population: " + parents.size());
+          System.out.println("No of individuals remaining in population: " + population.size());
           System.out.println("No of feasible children generated this generation: " + noFeasibleChildrenInGeneration);
           System.out.println("No of cross-overs this generation: " + noCrossOvers);
           System.out.println("No of mutations this generation: " + noMutations);
 
           //create line for report file
           line.append(Counter + "," + fittestGenome.convertPhenoToString() + "," + fittestGenome.getFitness() + "," + deckCost
-                      + "," + parents.size() + "," + noFeasibleChildrenInGeneration+ "," + noCrossOvers + "," + noMutations + "\n");
+                      + "," + population.size() + "," + noFeasibleChildrenInGeneration+ "," + noCrossOvers + "," + noMutations + "\n");
           //increase generation counter
           Counter++;
       }
@@ -229,8 +244,10 @@ public class MetricsForDBCGs {
           DominionDeckGenome genome = new DominionDeckGenome(deck);
           int cost = genome.getCost();
           if(cost <= DominionDeckGenome.MAX_COST_CONSTRAINT && cost >= DominionDeckGenome.MIN_COST_CONSTRAINT){
-              pop.add(genome);
-              noOfSamplesGenerated += 1;
+              if (!pop.contains(genome)) {
+                  pop.add(genome);
+                  noOfSamplesGenerated += 1;
+              }
           }
 
           //for low costs we might generate all possible decks before generating

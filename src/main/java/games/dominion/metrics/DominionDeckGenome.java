@@ -26,7 +26,7 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
   private double fitness;
   private boolean fitnessCalculated;
   public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
-  public static int NO_SIMULATIONS_EXPPAYOFF = 10;
+  public static int NO_SIMULATIONS_EXPPAYOFF = 1;
   public static int MAX_COST_CONSTRAINT = 80;
   public static int MIN_COST_CONSTRAINT = 60;
   public static CardType[] CARD_TYPES = {CardType.CELLAR, CardType.MARKET, CardType.MERCHANT,CardType.MILITIA,
@@ -102,6 +102,14 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
 
   public int[] getPhenotype(){
     return phenotype;
+  }
+
+  public boolean equals(DominionDeckGenome otherGenome){
+    if (genotype.equals(otherGenome.genotype)){
+      return true;
+    }else{
+      return false;
+    }
   }
 
   public String convertPhenoToString(){
