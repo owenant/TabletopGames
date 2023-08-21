@@ -7,6 +7,7 @@ import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
 import games.dominion.DominionFGParameters;
+import games.dominion.DominionGameState;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,22 +25,45 @@ public class MetricsForDBCGs {
   public static void main(String[] args) {
       System.out.println("Entry point to metrics for DBCGs....");
       //runTournament();
-      runMaxPayoffDeckSearch();
-      //testing();
+      //runMaxPayoffDeckSearch();
+      testingExpPayOff();
   }
-  public static void testing(){
+  public static void testingExpPayOff() {
       //testing no of simulations for expected payoff
-      long startTime = System.currentTimeMillis();
+      String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Testing/ExpPayOffConvergence";
+      File csvFile = new File(filename);
+      FileWriter fileWriter;
 
-      int[] pheno = {3,1,2,1,4,1,1,0,2,1,3};
-      DominionDeckGenome genomeTest = new DominionDeckGenome(pheno);
-      System.out.println(genomeTest.getCost());
-      System.out.println(genomeTest.getFitness());
+      StringBuilder line = new StringBuilder();
+      line.append("No Sims, Fitness, Elapsed Time \n");
 
-      long elapsedTime = System.currentTimeMillis() - startTime;
-      long elapsedSeconds = elapsedTime / 1000;
-      long elapsedMinutes = elapsedSeconds / 60;
-      System.out.printf("Fitness for test genome computed in %d minutes and %d seconds: ", elapsedMinutes, elapsedSeconds);
+      int[] pheno = {0, 3, 1, 0, 4, 0, 2, 0, 4, 3, 2};
+      //int[] pheno = {0,1,1,0,4,0,2,0,4,3,2};
+      int noSims;
+      for (int i = 1; i <= 20; i++) {
+          noSims = 5 * i;
+          long startTime = System.currentTimeMillis();
+          DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = noSims;
+          DominionDeckGenome genomeTest = new DominionDeckGenome(pheno);
+          System.out.println("No sims: " + noSims);
+          System.out.println("Fitness: " + genomeTest.getFitness());
+          long elapsedTime = System.currentTimeMillis() - startTime;
+          long elapsedSeconds = elapsedTime / 1000;
+          long elapsedMinutes = elapsedSeconds / 60;
+          System.out.printf("Fitness for test genome computed in %d minutes and %d seconds: ", elapsedMinutes, elapsedSeconds);
+          System.out.println("");
+
+          long elapsedTimeInSecs = elapsedMinutes * 60 + elapsedSeconds;
+          line.append(noSims + "," + genomeTest.getFitness() + "," + elapsedTimeInSecs + "\n");
+      }
+
+      try {
+          fileWriter = new FileWriter(csvFile);
+          fileWriter.write(line.toString());
+          fileWriter.close();
+      }catch(Exception e){
+          System.out.println("Error opening file for expected payoff testing");
+      }
       return;
   }
 
