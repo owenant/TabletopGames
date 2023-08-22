@@ -1,5 +1,6 @@
 package games.dominion.metrics;
 
+import algebra.lattice.Bool;
 import core.AbstractGameState;
 import core.AbstractPlayer;
 import core.Game;
@@ -25,10 +26,10 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
   private int[] phenotype;
   private double fitness;
   private boolean fitnessCalculated;
-  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
-  public static int NO_SIMULATIONS_EXPPAYOFF = 1;
-  public static int MAX_COST_CONSTRAINT = 80;
-  public static int MIN_COST_CONSTRAINT = 60;
+  public static int MAX_NO_OF_CARDS_OF_ANY_TYPE;
+  public static int NO_SIMULATIONS_EXPPAYOFF;
+  public static int MAX_COST_CONSTRAINT;
+  public static int MIN_COST_CONSTRAINT;
   public static CardType[] CARD_TYPES = {CardType.CELLAR, CardType.MARKET, CardType.MERCHANT,CardType.MILITIA,
       CardType.MINE,CardType.MOAT,CardType.SMITHY,CardType.VILLAGE,CardType.GOLD,
       CardType.SILVER, CardType.COPPER};
@@ -104,11 +105,15 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     return phenotype;
   }
 
-  public boolean equals(DominionDeckGenome otherGenome){
-    if (genotype.equals(otherGenome.genotype)){
-      return true;
+  public boolean equals(Object obj){
+    if(obj != null && obj instanceof DominionDeckGenome) {
+      if (genotype.equals(((DominionDeckGenome) obj).getGenotype())) {
+        return true;
+      } else {
+        return false;
+      }
     }else{
-      return false;
+      return true;
     }
   }
 

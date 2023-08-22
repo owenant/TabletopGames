@@ -25,8 +25,8 @@ public class MetricsForDBCGs {
   public static void main(String[] args) {
       System.out.println("Entry point to metrics for DBCGs....");
       //runTournament();
-      //runMaxPayoffDeckSearch();
-      testingExpPayOff();
+      runMaxPayoffDeckSearch();
+      //testingExpPayOff();
   }
   public static void testingExpPayOff() {
       //testing no of simulations for expected payoff
@@ -34,17 +34,20 @@ public class MetricsForDBCGs {
       File csvFile = new File(filename);
       FileWriter fileWriter;
 
-      StringBuilder line = new StringBuilder();
-      line.append("No Sims, Fitness, Elapsed Time \n");
-
-      int[] pheno = {0, 3, 1, 0, 4, 0, 2, 0, 4, 3, 2};
+      //int[] pheno = {0, 3, 1, 0, 4, 0, 2, 0, 4, 3, 2};
+      int[] pheno = {0,2,0,1,3,2,2,0,4,2,3};
       //int[] pheno = {0,1,1,0,4,0,2,0,4,3,2};
+
+      StringBuilder line = new StringBuilder();
+      DominionDeckGenome genomeTest = new DominionDeckGenome(pheno);
+      line.append(genomeTest.convertPhenoToString() + "\n");
+      line.append("No Sims, Fitness, Elapsed Time \n");
       int noSims;
       for (int i = 1; i <= 20; i++) {
           noSims = 5 * i;
           long startTime = System.currentTimeMillis();
           DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = noSims;
-          DominionDeckGenome genomeTest = new DominionDeckGenome(pheno);
+          genomeTest = new DominionDeckGenome(pheno);
           System.out.println("No sims: " + noSims);
           System.out.println("Fitness: " + genomeTest.getFitness());
           long elapsedTime = System.currentTimeMillis() - startTime;
@@ -80,7 +83,11 @@ public class MetricsForDBCGs {
       double probCrossOver = 0.8;
       double probMutation = 0.05;
       int noGenerations = 250;
-      int maxChildCreationAttemptsPriorToFailure = 10;
+      int maxChildCreationAttemptsPriorToFailure = 100;
+      DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
+      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 20;
+      DominionDeckGenome.MAX_COST_CONSTRAINT = 80;
+      DominionDeckGenome.MIN_COST_CONSTRAINT = 60;
 
       System.out.println("Search for optimal decks with different cost amounts....");
 
@@ -121,13 +128,13 @@ public class MetricsForDBCGs {
       Random rnd = new Random(System.currentTimeMillis());
       int Counter = 0;
       startTime = System.currentTimeMillis();
-      while (Counter < noGenerations){
+      while (Counter < noGenerations) {
           int noFeasibleChildrenInGeneration = 0;
           int childCreationCycles = 0;
           int noMutations = 0;
           int noCrossOvers = 0;
           ArrayList<DominionDeckGenome> children = new ArrayList<DominionDeckGenome>();
-          while(noFeasibleChildrenInGeneration < 1 || childCreationCycles <= maxChildCreationAttemptsPriorToFailure) {
+          while (noFeasibleChildrenInGeneration < 1 && childCreationCycles <= maxChildCreationAttemptsPriorToFailure) {
               noMutations = 0;
               noCrossOvers = 0;
               for (int pair = 0; pair < (int) Math.floor(population.size() / 2.0); pair++) {
@@ -155,20 +162,23 @@ public class MetricsForDBCGs {
                       noMutations++;
                   }
 
-                  //check if child satisfies cost constraint and if so add to population
+                  //check if child satisfies cost constraint and if so add to population (avoiding duplicates)
                   if (!child1.getGenotype().equals(parent1.getGenotype())) {
                       int deckCost1 = child1.getCost();
                       if (deckCost1 <= DominionDeckGenome.MAX_COST_CONSTRAINT
-                          && deckCost1 >= DominionDeckGenome.MIN_COST_CONSTRAINT) {
+                          && deckCost1 >= DominionDeckGenome.MIN_COST_CONSTRAINT
+                          && !population.contains(child1)) {
                           noFeasibleChildrenInGeneration++;
                           child1.getFitness();
                           population.add(child1);
                       }
                   }
+
                   if (!child2.getGenotype().equals(parent2.getGenotype())) {
                       int deckCost2 = child2.getCost();
                       if (deckCost2 <= DominionDeckGenome.MAX_COST_CONSTRAINT
-                          && deckCost2 >= DominionDeckGenome.MIN_COST_CONSTRAINT) {
+                          && deckCost2 >= DominionDeckGenome.MIN_COST_CONSTRAINT
+                          && !population.contains(child2)) {
                           noFeasibleChildrenInGeneration++;
                           child2.getFitness();
                           population.add(child2);
@@ -183,35 +193,70 @@ public class MetricsForDBCGs {
           //sort population by fitness
           Collections.sort(population);
 
+          //note we keep expanding the population and including any children
+          //that may not be as fit as the initial set of parents to increase diversity
           //next generation
-          ArrayList<DominionDeckGenome> nextGen = new ArrayList<DominionDeckGenome>();
-          for(int i = 1; i <= noIndividuals; i++){
-              nextGen.add(population.get(population.size()-i));
-          }
+          //ArrayList<DominionDeckGenome> nextGen = new ArrayList<DominionDeckGenome>();
+          //for(int i = 1; i <= noIndividuals; i++){
+          //    nextGen.add(population.get(population.size()-i));
+          //}
 
           //reset population list to new generation
-          population.clear();
-          for (int i = 0; i < nextGen.size(); i++){
-              population.add(nextGen.get(i));
-          }
+          //population.clear();
+          //for (int i = 0; i < nextGen.size(); i++){
+          //    population.add(nextGen.get(i));
+          //}
 
           //output size of next generation population and fitness of fittest individual
-          DominionDeckGenome fittestGenome = population.get(0);
+          DominionDeckGenome fittestGenome = population.get(population.size() - 1);
           int deckCost = fittestGenome.getCost();
           System.out.println("Generation: " + Counter);
           System.out.println("Fittest Deck: " + fittestGenome.convertPhenoToString());
           System.out.println("Fitness: " + fittestGenome.getFitness());
           System.out.println("Deck Cost: " + deckCost);
           System.out.println("No of individuals remaining in population: " + population.size());
-          System.out.println("No of feasible children generated this generation: " + noFeasibleChildrenInGeneration);
+          System.out.println("No of feasible children generated this generation: "
+              + noFeasibleChildrenInGeneration);
           System.out.println("No of cross-overs this generation: " + noCrossOvers);
           System.out.println("No of mutations this generation: " + noMutations);
 
-          //create line for report file
-          line.append(Counter + "," + fittestGenome.convertPhenoToString() + "," + fittestGenome.getFitness() + "," + deckCost
-                      + "," + population.size() + "," + noFeasibleChildrenInGeneration+ "," + noCrossOvers + "," + noMutations + "\n");
+          //create line for summary report file
+          line.append(Counter + "," + fittestGenome.convertPhenoToString() + ","
+              + fittestGenome.getFitness() + "," + deckCost
+              + "," + population.size() + "," + noFeasibleChildrenInGeneration + "," + noCrossOvers
+              + "," + noMutations + "\n");
+
+          //output population to file every 10 generations
+          if (Counter % 10 == 0) {
+              String filenameForPop =
+                  "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/GeneticAlgorithm/PopulationGeneration"
+                      + Counter;
+              File csvFilePop = new File(filenameForPop);
+              FileWriter fileWriterForPop;
+              try {
+                  StringBuilder lineForPop = new StringBuilder();
+                  for (int i = 0; i < population.size(); i++) {
+                      lineForPop.append(
+                          population.get(i).convertPhenoToString() + ":" + population.get(i)
+                              .getFitness() + "\n");
+                  }
+                  fileWriterForPop = new FileWriter(csvFilePop);
+                  fileWriterForPop.write(lineForPop.toString());
+                  fileWriterForPop.close();
+              } catch (Exception e) {
+                  System.out.println("Error opening file for GA results");
+              }
+          }
+
           //increase generation counter
           Counter++;
+
+          //if we were unable to generate any feasible children in this generation then
+          //terminate the algorithm early.
+          if(noFeasibleChildrenInGeneration == 0){
+              System.out.println("Unable to generate any feasible children in this generation, terminating algorithm");
+              break;
+          }
       }
 
       elapsedTime = System.currentTimeMillis() - startTime;
