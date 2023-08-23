@@ -34,16 +34,24 @@ public class MetricsForDBCGs {
       File csvFile = new File(filename);
       FileWriter fileWriter;
 
+      //set genome parameters
+      DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
+      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 20;
+      DominionDeckGenome.MAX_COST_CONSTRAINT = 80;
+      DominionDeckGenome.MIN_COST_CONSTRAINT = 40;
+
       //int[] pheno = {0, 3, 1, 0, 4, 0, 2, 0, 4, 3, 2};
-      int[] pheno = {0,2,0,1,3,2,2,0,4,2,3};
+      //int[] pheno = {0,2,0,1,3,2,2,0,4,2,3};
       //int[] pheno = {0,1,1,0,4,0,2,0,4,3,2};
+      int[] pheno = {2,2,3,1,1,3,3,4,1,4,2};
 
       StringBuilder line = new StringBuilder();
       DominionDeckGenome genomeTest = new DominionDeckGenome(pheno);
       line.append(genomeTest.convertPhenoToString() + "\n");
+      line.append("Deck cost: " + genomeTest.getCost() + "\n");
       line.append("No Sims, Fitness, Elapsed Time \n");
       int noSims;
-      for (int i = 1; i <= 20; i++) {
+      for (int i = 1; i <= 10; i++) {
           noSims = 5 * i;
           long startTime = System.currentTimeMillis();
           DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = noSims;
@@ -77,17 +85,17 @@ public class MetricsForDBCGs {
       FileWriter fileWriter;
 
       //parameters
-      int noIndividuals = 100;
+      int noIndividuals = 10;
       int maxIterations = 10000;
       long initialPopSeed = 100;
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 250;
-      int maxChildCreationAttemptsPriorToFailure = 100;
+      int noGenerations = 2;
+      int maxChildCreationAttemptsPriorToFailure = 1000;
       DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
       DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 20;
       DominionDeckGenome.MAX_COST_CONSTRAINT = 80;
-      DominionDeckGenome.MIN_COST_CONSTRAINT = 60;
+      DominionDeckGenome.MIN_COST_CONSTRAINT = 40;
 
       System.out.println("Search for optimal decks with different cost amounts....");
 
@@ -193,22 +201,20 @@ public class MetricsForDBCGs {
           //sort population by fitness
           Collections.sort(population);
 
-          //note we keep expanding the population and including any children
-          //that may not be as fit as the initial set of parents to increase diversity
           //next generation
-          //ArrayList<DominionDeckGenome> nextGen = new ArrayList<DominionDeckGenome>();
-          //for(int i = 1; i <= noIndividuals; i++){
-          //    nextGen.add(population.get(population.size()-i));
-          //}
+          ArrayList<DominionDeckGenome> nextGen = new ArrayList<DominionDeckGenome>();
+          for(int i = 1; i <= noIndividuals; i++){
+              nextGen.add(population.get(population.size()-i));
+          }
 
           //reset population list to new generation
-          //population.clear();
-          //for (int i = 0; i < nextGen.size(); i++){
-          //    population.add(nextGen.get(i));
-          //}
+          population.clear();
+          for (int i = 0; i < nextGen.size(); i++){
+              population.add(nextGen.get(i));
+          }
 
           //output size of next generation population and fitness of fittest individual
-          DominionDeckGenome fittestGenome = population.get(population.size() - 1);
+          DominionDeckGenome fittestGenome = population.get(0);
           int deckCost = fittestGenome.getCost();
           System.out.println("Generation: " + Counter);
           System.out.println("Fittest Deck: " + fittestGenome.convertPhenoToString());

@@ -147,7 +147,7 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
 
     //check to see if genotype is compatible with cost constraint
     int deckCost = getCost();
-    if (deckCost >= MAX_COST_CONSTRAINT || deckCost <= MIN_COST_CONSTRAINT){
+    if (deckCost > MAX_COST_CONSTRAINT || deckCost < MIN_COST_CONSTRAINT){
       return 0;
     }else {
       //long startTime = System.currentTimeMillis();
