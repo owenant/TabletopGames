@@ -85,15 +85,16 @@ public class MetricsForDBCGs {
       FileWriter fileWriter;
 
       //parameters
-      int noIndividuals = 100;
+      int noIndividuals = 20;
       int maxIterations = 10000;
       long initialPopSeed = 100;
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 250;
+      int noGenerations = 5;
       int maxChildCreationAttemptsPriorToFailure = 1000;
+      int maxParentRedraws = 100;
       DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
-      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 20;
+      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 5;
       DominionDeckGenome.MAX_COST_CONSTRAINT = 100000;
       DominionDeckGenome.MIN_COST_CONSTRAINT = 0;
 
@@ -144,51 +145,69 @@ public class MetricsForDBCGs {
           while (noFeasibleChildrenInGeneration < 1 && childCreationCycles <= maxChildCreationAttemptsPriorToFailure) {
               noMutations = 0;
               noCrossOvers = 0;
+              //TODO: why this number of pairs?
               for (int pair = 0; pair < (int) Math.floor(population.size() / 2.0); pair++) {
                   //draw pairs of individuals randomly from the population
                   DominionDeckGenome parent1 = drawFromPopulation(population);
+
+                  //keep redrawing parent2 until we find a genome different from parent 1
                   DominionDeckGenome parent2 = drawFromPopulation(population);
+                  int parentReDraws = 0;
+                  while (parent2.equals(parent1) && parentReDraws < maxParentRedraws){
+                      parent2 = drawFromPopulation(population);
+                      parentReDraws++;
+                  }
+                  if (parentReDraws == maxParentRedraws){
+                      System.out.println("Warning: Unable to find a distinct set of parents");
+                      break;
+                  }
 
                   //cross-over pairs with a probability probCrossOver
-                  DominionDeckGenome child1 = new DominionDeckGenome(parent1.getGenotype());
-                  DominionDeckGenome child2 = new DominionDeckGenome(parent2.getGenotype());
                   if (rnd.nextFloat() < probCrossOver) {
+                      DominionDeckGenome child1 = new DominionDeckGenome(parent1.getGenotype());
+                      DominionDeckGenome child2 = new DominionDeckGenome(parent2.getGenotype());
                       ArrayList<DominionDeckGenome> childList = DominionDeckGenome.crossOver(
                           parent1, parent2);
                       child1 = childList.get(0);
                       child2 = childList.get(1);
                       noCrossOvers++;
-                  }
-                  //mutate each new child with probability probMutation
-                  if (rnd.nextFloat() < probMutation) {
-                      child1 = DominionDeckGenome.mutate(child1);
-                      noMutations++;
-                  }
-                  if (rnd.nextFloat() < probMutation) {
-                      child2 = DominionDeckGenome.mutate(child2);
-                      noMutations++;
-                  }
 
-                  //check if child satisfies cost constraint and if so add to population (avoiding duplicates)
-                  if (!child1.getGenotype().equals(parent1.getGenotype())) {
-                      int deckCost1 = child1.getCost();
-                      if (deckCost1 <= DominionDeckGenome.MAX_COST_CONSTRAINT
-                          && deckCost1 >= DominionDeckGenome.MIN_COST_CONSTRAINT
-                          && !population.contains(child1)) {
-                          noFeasibleChildrenInGeneration++;
+                      //check that cross-overs satisfy cost constraint and are new genomes
+                      if (checkToAddToPop(child1, population)){
                           child1.getFitness();
                           population.add(child1);
+                          noFeasibleChildrenInGeneration++;
+                      }
+
+                      //check that cross-overs satisfy cost constraint and are new genomes
+                      if (checkToAddToPop(child2, population)){
+                          child2.getFitness();
+                          population.add(child2);
+                          noFeasibleChildrenInGeneration++;
                       }
                   }
 
-                  if (!child2.getGenotype().equals(parent2.getGenotype())) {
-                      int deckCost2 = child2.getCost();
-                      if (deckCost2 <= DominionDeckGenome.MAX_COST_CONSTRAINT
-                          && deckCost2 >= DominionDeckGenome.MIN_COST_CONSTRAINT
-                          && !population.contains(child2)) {
+                  //mutate parent1 with probability probMutation
+                  if (rnd.nextFloat() < probMutation) {
+                      DominionDeckGenome mutantChild = new DominionDeckGenome(parent1.getGenotype());
+                      mutantChild = DominionDeckGenome.mutate(parent1);
+                      noMutations++;
+                      if (checkToAddToPop(mutantChild, population)){
+                          mutantChild.getFitness();
+                          population.add(mutantChild);
                           noFeasibleChildrenInGeneration++;
-                          child2.getFitness();
-                          population.add(child2);
+                      }
+                  }
+
+                  //mutate parent2 with probability probMutation
+                  if (rnd.nextFloat() < probMutation) {
+                      DominionDeckGenome mutantChild = new DominionDeckGenome(parent2.getGenotype());
+                      mutantChild = DominionDeckGenome.mutate(parent2);
+                      noMutations++;
+                      if (checkToAddToPop(mutantChild, population)){
+                          mutantChild.getFitness();
+                          population.add(mutantChild);
+                          noFeasibleChildrenInGeneration++;
                       }
                   }
 
@@ -279,6 +298,17 @@ public class MetricsForDBCGs {
       }
   }
 
+  public static boolean checkToAddToPop(DominionDeckGenome genome, ArrayList<DominionDeckGenome> pop){
+      //checks whether or not we should add this genome to our population
+      int deckCost = genome.getCost();
+      if (deckCost <= DominionDeckGenome.MAX_COST_CONSTRAINT
+          && deckCost >= DominionDeckGenome.MIN_COST_CONSTRAINT
+          && !pop.contains(genome)){
+            return true;
+      }else{
+          return false;
+      }
+  }
   public static DominionDeckGenome drawFromPopulation(ArrayList<DominionDeckGenome> population){
       //draw a sample from a population using the relative fitness of each sample
       //compared ot the whole population
@@ -291,6 +321,8 @@ public class MetricsForDBCGs {
       }
 
       //randomly select a sample from the population
+      //Maybe TODO:: need to be careful here because the population is sorted by fitness
+      //so testing fittest genome first
       for(DominionDeckGenome genome : population){
           double probOfSelection = genome.getFitness()/totalfitness;
           if (rnd.nextFloat() < probOfSelection){
