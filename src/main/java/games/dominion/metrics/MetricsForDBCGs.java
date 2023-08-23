@@ -85,17 +85,17 @@ public class MetricsForDBCGs {
       FileWriter fileWriter;
 
       //parameters
-      int noIndividuals = 10;
+      int noIndividuals = 100;
       int maxIterations = 10000;
       long initialPopSeed = 100;
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 2;
+      int noGenerations = 250;
       int maxChildCreationAttemptsPriorToFailure = 1000;
       DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
       DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 20;
-      DominionDeckGenome.MAX_COST_CONSTRAINT = 80;
-      DominionDeckGenome.MIN_COST_CONSTRAINT = 40;
+      DominionDeckGenome.MAX_COST_CONSTRAINT = 100000;
+      DominionDeckGenome.MIN_COST_CONSTRAINT = 0;
 
       System.out.println("Search for optimal decks with different cost amounts....");
 
@@ -121,7 +121,6 @@ public class MetricsForDBCGs {
       StringBuilder line = new StringBuilder();
       line.append("No of individuals in initial population: " + population.size() + "\n");
       line.append("Max cost constraint: " + DominionDeckGenome.MAX_COST_CONSTRAINT + "\n");
-      line.append("Min cost constraint: " + DominionDeckGenome.MIN_COST_CONSTRAINT + "\n");
       line.append("Min cost constraint: " + DominionDeckGenome.MIN_COST_CONSTRAINT + "\n");
       //TODO: have different max cards for action vs treasury
       line.append("Max number of cards of any type: " + DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE + "\n");
