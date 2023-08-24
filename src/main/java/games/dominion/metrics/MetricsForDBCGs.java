@@ -85,16 +85,16 @@ public class MetricsForDBCGs {
       FileWriter fileWriter;
 
       //parameters
-      int noIndividuals = 20;
+      int noIndividuals = 150;
       int maxIterations = 10000;
       long initialPopSeed = 100;
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 5;
+      int noGenerations = 150;
       int maxChildCreationAttemptsPriorToFailure = 1000;
       int maxParentRedraws = 100;
       DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
-      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 5;
+      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 1;
       DominionDeckGenome.MAX_COST_CONSTRAINT = 100000;
       DominionDeckGenome.MIN_COST_CONSTRAINT = 0;
 
@@ -112,6 +112,9 @@ public class MetricsForDBCGs {
           //make sure to compute fitness for each child before adding to parents list
           genome.getFitness();
       }
+      //sort population by fitness
+      Collections.sort(population);
+
       long elapsedTime = System.currentTimeMillis() - startTime;
       long elapsedSeconds = elapsedTime / 1000;
       long elapsedMinutes = elapsedSeconds / 60;
@@ -137,6 +140,7 @@ public class MetricsForDBCGs {
       int Counter = 0;
       startTime = System.currentTimeMillis();
       while (Counter < noGenerations) {
+          System.out.println("Generation: " + Counter);
           int noFeasibleChildrenInGeneration = 0;
           int childCreationCycles = 0;
           int noMutations = 0;
@@ -148,13 +152,13 @@ public class MetricsForDBCGs {
               //TODO: why this number of pairs?
               for (int pair = 0; pair < (int) Math.floor(population.size() / 2.0); pair++) {
                   //draw pairs of individuals randomly from the population
-                  DominionDeckGenome parent1 = drawFromPopulation(population);
+                  DominionDeckGenome parent1 = drawFromPopulation(population,rnd);
 
                   //keep redrawing parent2 until we find a genome different from parent 1
-                  DominionDeckGenome parent2 = drawFromPopulation(population);
+                  DominionDeckGenome parent2 = drawFromPopulation(population, rnd);
                   int parentReDraws = 0;
                   while (parent2.equals(parent1) && parentReDraws < maxParentRedraws){
-                      parent2 = drawFromPopulation(population);
+                      parent2 = drawFromPopulation(population, rnd);
                       parentReDraws++;
                   }
                   if (parentReDraws == maxParentRedraws){
@@ -190,7 +194,7 @@ public class MetricsForDBCGs {
                   //mutate parent1 with probability probMutation
                   if (rnd.nextFloat() < probMutation) {
                       DominionDeckGenome mutantChild = new DominionDeckGenome(parent1.getGenotype());
-                      mutantChild = DominionDeckGenome.mutate(parent1);
+                      mutantChild = DominionDeckGenome.mutate(parent1, rnd);
                       noMutations++;
                       if (checkToAddToPop(mutantChild, population)){
                           mutantChild.getFitness();
@@ -202,7 +206,7 @@ public class MetricsForDBCGs {
                   //mutate parent2 with probability probMutation
                   if (rnd.nextFloat() < probMutation) {
                       DominionDeckGenome mutantChild = new DominionDeckGenome(parent2.getGenotype());
-                      mutantChild = DominionDeckGenome.mutate(parent2);
+                      mutantChild = DominionDeckGenome.mutate(parent2, rnd);
                       noMutations++;
                       if (checkToAddToPop(mutantChild, population)){
                           mutantChild.getFitness();
@@ -221,8 +225,8 @@ public class MetricsForDBCGs {
 
           //next generation
           ArrayList<DominionDeckGenome> nextGen = new ArrayList<DominionDeckGenome>();
-          for(int i = 1; i <= noIndividuals; i++){
-              nextGen.add(population.get(population.size()-i));
+          for(int i = 0; i < noIndividuals; i++){
+              nextGen.add(population.get(i));
           }
 
           //reset population list to new generation
@@ -234,7 +238,6 @@ public class MetricsForDBCGs {
           //output size of next generation population and fitness of fittest individual
           DominionDeckGenome fittestGenome = population.get(0);
           int deckCost = fittestGenome.getCost();
-          System.out.println("Generation: " + Counter);
           System.out.println("Fittest Deck: " + fittestGenome.convertPhenoToString());
           System.out.println("Fitness: " + fittestGenome.getFitness());
           System.out.println("Deck Cost: " + deckCost);
@@ -309,29 +312,31 @@ public class MetricsForDBCGs {
           return false;
       }
   }
-  public static DominionDeckGenome drawFromPopulation(ArrayList<DominionDeckGenome> population){
+  public static DominionDeckGenome drawFromPopulation(ArrayList<DominionDeckGenome> population, Random rnd){
       //draw a sample from a population using the relative fitness of each sample
       //compared ot the whole population
-      Random rnd = new Random(System.currentTimeMillis());
 
       //total fitness values across population
-      double totalfitness = 0;
-      for(DominionDeckGenome genome : population){
-          totalfitness += genome.getFitness();
-      }
+      //double totalfitness = 0;
+      //for(DominionDeckGenome genome : population){
+      //    totalfitness += genome.getFitness();
+      //}
 
       //randomly select a sample from the population
       //Maybe TODO:: need to be careful here because the population is sorted by fitness
       //so testing fittest genome first
-      for(DominionDeckGenome genome : population){
-          double probOfSelection = genome.getFitness()/totalfitness;
-          if (rnd.nextFloat() < probOfSelection){
-              return genome;
-          }
-      }
+      //for(DominionDeckGenome genome : population){
+      //    double probOfSelection = genome.getFitness()/totalfitness;
+      //    //TODO:: this is a problem nextFloat will almost always be greater than this bound
+      //    //need to use one random float draw to pick one genome in the list in some way?
+      //    if (rnd.nextFloat() < probOfSelection){
+      //        return genome;
+      //    }
+      //}
 
       //if nothing chosen, just choose a random entry in the map
-      return population.get(rnd.nextInt(population.size()));
+      int randIndex = rnd.nextInt(population.size());
+      return population.get(randIndex);
   }
   public static ArrayList<DominionDeckGenome> genInitialPopulation(int numberOfIndividuals, int maxIterations, long seed)
   {

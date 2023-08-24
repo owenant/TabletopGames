@@ -132,9 +132,9 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
 
   public int compareTo(DominionDeckGenome otherGenome){
     if (fitness > otherGenome.fitness){
-      return 1;
-    }else if (fitness < otherGenome.fitness){
       return -1;
+    }else if (fitness < otherGenome.fitness){
+      return 1;
     }else{
       return 0;
     }
@@ -251,10 +251,8 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
 
     return children;
   }
-  public static DominionDeckGenome mutate(DominionDeckGenome genome){
+  public static DominionDeckGenome mutate(DominionDeckGenome genome, Random rnd){
     //randomly flip a bit in genotype and return a new genome
-    //Random rnd = new Random(System.currentTimeMillis());
-    Random rnd = new Random(100);
     int rndIndex = rnd.nextInt(genome.genotype.length());
 
     String newGenotype = new String();
