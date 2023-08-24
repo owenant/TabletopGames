@@ -43,7 +43,8 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
     //number of bits per integer is dependent on integer upper bound
     int noBitsPerInt = (int)Math.floor(Math.log(MAX_NO_OF_CARDS_OF_ANY_TYPE)/Math.log(2)+1);
 
-    //check genotype is compatible with maxInt constraint
+    //check genotype is compatible with maxInt constraint ( this is a necessary but not
+    //sufficient condition)
     if (genotype.length() != CARD_TYPES.length * noBitsPerInt){
       System.out.println("Error: incompatible genotype, cant convert to phenotype");
     }
@@ -147,7 +148,7 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
 
     //check to see if genotype is compatible with cost constraint
     int deckCost = getCost();
-    if (deckCost > MAX_COST_CONSTRAINT || deckCost < MIN_COST_CONSTRAINT){
+    if (deckCost > MAX_COST_CONSTRAINT || deckCost < MIN_COST_CONSTRAINT || !checkWithinMaxCardLimit()){
       return 0;
     }else {
       //long startTime = System.currentTimeMillis();
@@ -236,6 +237,15 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
       cost += phenotype[i] * CARD_TYPES[i].cost;
     }
     return cost;
+  }
+
+  public boolean checkWithinMaxCardLimit(){
+    for(int i = 0; i < phenotype.length; i++) {
+      if (phenotype[i] > MAX_NO_OF_CARDS_OF_ANY_TYPE) {
+        return false;
+      }
+    }
+    return true;
   }
   public static ArrayList<DominionDeckGenome> crossOver(DominionDeckGenome parent1, DominionDeckGenome parent2){
     //cross-over genes of two parents to make two new off spring

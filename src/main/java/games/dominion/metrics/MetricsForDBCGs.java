@@ -141,12 +141,12 @@ public class MetricsForDBCGs {
       startTime = System.currentTimeMillis();
       while (Counter < noGenerations) {
           System.out.println("Generation: " + Counter);
-          int noFeasibleChildrenInGeneration = 0;
           int childCreationCycles = 0;
           int noMutations = 0;
           int noCrossOvers = 0;
+
           ArrayList<DominionDeckGenome> children = new ArrayList<DominionDeckGenome>();
-          while (noFeasibleChildrenInGeneration < 1 && childCreationCycles <= maxChildCreationAttemptsPriorToFailure) {
+          while (children.size() < 1 && childCreationCycles <= maxChildCreationAttemptsPriorToFailure) {
               noMutations = 0;
               noCrossOvers = 0;
               //TODO: why this number of pairs?
@@ -176,18 +176,15 @@ public class MetricsForDBCGs {
                       child2 = childList.get(1);
                       noCrossOvers++;
 
-                      //check that cross-overs satisfy cost constraint and are new genomes
+                      //check that cross-overs satisfy cost constraint, max card constraint and are new genomes
                       if (checkToAddToPop(child1, population)){
                           child1.getFitness();
-                          population.add(child1);
-                          noFeasibleChildrenInGeneration++;
+                          children.add(child1);
                       }
 
-                      //check that cross-overs satisfy cost constraint and are new genomes
                       if (checkToAddToPop(child2, population)){
                           child2.getFitness();
-                          population.add(child2);
-                          noFeasibleChildrenInGeneration++;
+                          children.add(child2);
                       }
                   }
 
@@ -198,8 +195,7 @@ public class MetricsForDBCGs {
                       noMutations++;
                       if (checkToAddToPop(mutantChild, population)){
                           mutantChild.getFitness();
-                          population.add(mutantChild);
-                          noFeasibleChildrenInGeneration++;
+                          children.add(mutantChild);
                       }
                   }
 
@@ -210,17 +206,19 @@ public class MetricsForDBCGs {
                       noMutations++;
                       if (checkToAddToPop(mutantChild, population)){
                           mutantChild.getFitness();
-                          population.add(mutantChild);
-                          noFeasibleChildrenInGeneration++;
+                          children.add(mutantChild);
                       }
                   }
-
-                  //track number of times attempted to create children
+              }
+              if (children.size() == 0){
                   childCreationCycles++;
               }
           }
 
-          //sort population by fitness
+          //add children to exiting population and then sort by fitness
+          for (DominionDeckGenome child : children){
+              population.add(child);
+          }
           Collections.sort(population);
 
           //next generation
@@ -242,16 +240,16 @@ public class MetricsForDBCGs {
           System.out.println("Fitness: " + fittestGenome.getFitness());
           System.out.println("Deck Cost: " + deckCost);
           System.out.println("No of individuals remaining in population: " + population.size());
-          System.out.println("No of feasible children generated this generation: "
-              + noFeasibleChildrenInGeneration);
+          System.out.println("No of feasible children generated this generation: " + children.size());
           System.out.println("No of cross-overs this generation: " + noCrossOvers);
           System.out.println("No of mutations this generation: " + noMutations);
+          System.out.println("No of child creation cycles this generation: " + childCreationCycles);
 
           //create line for summary report file
           line.append(Counter + "," + fittestGenome.convertPhenoToString() + ","
               + fittestGenome.getFitness() + "," + deckCost
-              + "," + population.size() + "," + noFeasibleChildrenInGeneration + "," + noCrossOvers
-              + "," + noMutations + "\n");
+              + "," + population.size() + "," + children.size() + "," + noCrossOvers
+              + "," + noMutations + "," + childCreationCycles + "\n");
 
           //output population to file every 10 generations
           if (Counter % 10 == 0) {
@@ -280,7 +278,7 @@ public class MetricsForDBCGs {
 
           //if we were unable to generate any feasible children in this generation then
           //terminate the algorithm early.
-          if(noFeasibleChildrenInGeneration == 0){
+          if(children.size() == 0){
               System.out.println("Unable to generate any feasible children in this generation, terminating algorithm");
               break;
           }
@@ -306,7 +304,7 @@ public class MetricsForDBCGs {
       int deckCost = genome.getCost();
       if (deckCost <= DominionDeckGenome.MAX_COST_CONSTRAINT
           && deckCost >= DominionDeckGenome.MIN_COST_CONSTRAINT
-          && !pop.contains(genome)){
+          && genome.checkWithinMaxCardLimit() && !pop.contains(genome)){
             return true;
       }else{
           return false;
