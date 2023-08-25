@@ -94,7 +94,7 @@ public class MetricsForDBCGs {
       int maxChildCreationAttemptsPriorToFailure = 1000;
       int maxParentRedraws = 100;
       DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
-      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 1;
+      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 20;
       DominionDeckGenome.MAX_COST_CONSTRAINT = 100000;
       DominionDeckGenome.MIN_COST_CONSTRAINT = 0;
 
@@ -312,29 +312,42 @@ public class MetricsForDBCGs {
   }
   public static DominionDeckGenome drawFromPopulation(ArrayList<DominionDeckGenome> population, Random rnd){
       //draw a sample from a population using the relative fitness of each sample
-      //compared ot the whole population
+      //compared ot the whole population (Roulette wheel method)
 
       //total fitness values across population
-      //double totalfitness = 0;
-      //for(DominionDeckGenome genome : population){
-      //    totalfitness += genome.getFitness();
-      //}
+      double totalfitness = 0;
+      for(DominionDeckGenome genome : population){
+          totalfitness += genome.getFitness();
+      }
+
+      //calculate probability interval for each genome
+      ArrayList<Double> probInterval = new ArrayList<Double>();
+      for(int i = 0; i < population.size(); i++){
+          double scaledFitness = population.get(i).getFitness()/totalfitness;
+          if(i == 0){
+              probInterval.add(i,scaledFitness);
+          }else if (i == population.size() -1){
+              //to avoid rounding errors
+              probInterval.add(i, 1.0);
+          }else{
+              probInterval.add(i, probInterval.get(i-1) + scaledFitness);
+          }
+      }
 
       //randomly select a sample from the population
-      //Maybe TODO:: need to be careful here because the population is sorted by fitness
-      //so testing fittest genome first
-      //for(DominionDeckGenome genome : population){
-      //    double probOfSelection = genome.getFitness()/totalfitness;
-      //    //TODO:: this is a problem nextFloat will almost always be greater than this bound
-      //    //need to use one random float draw to pick one genome in the list in some way?
-      //    if (rnd.nextFloat() < probOfSelection){
-      //        return genome;
-      //    }
-      //}
+      double randomDraw = rnd.nextFloat();
+      for(int i = 0; i < probInterval.size(); i++){
+          if (i == 0){
+              if (randomDraw <= probInterval.get(0)){
+                  return population.get(0);
+              }else if (randomDraw > probInterval.get(i-1) && randomDraw <= probInterval.get(i)){
+                  return population.get(i);
+              }
+          }
+      }
 
-      //if nothing chosen, just choose a random entry in the map
-      int randIndex = rnd.nextInt(population.size());
-      return population.get(randIndex);
+      //should be impossible to reach here
+      return null;
   }
   public static ArrayList<DominionDeckGenome> genInitialPopulation(int numberOfIndividuals, int maxIterations, long seed)
   {
