@@ -90,7 +90,7 @@ public class MetricsForDBCGs {
       long initialPopSeed = 100;
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 150;
+      int noGenerations = 400;
       int maxChildCreationAttemptsPriorToFailure = 1000;
       int maxParentRedraws = 100;
       DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
@@ -338,14 +338,13 @@ public class MetricsForDBCGs {
       double randomDraw = rnd.nextFloat();
       for(int i = 0; i < probInterval.size(); i++){
           if (i == 0){
-              if (randomDraw <= probInterval.get(0)){
+              if (randomDraw <= probInterval.get(0)) {
                   return population.get(0);
-              }else if (randomDraw > probInterval.get(i-1) && randomDraw <= probInterval.get(i)){
-                  return population.get(i);
               }
+          }else if (randomDraw > probInterval.get(i-1) && randomDraw <= probInterval.get(i)){
+              return population.get(i);
           }
       }
-
       //should be impossible to reach here
       return null;
   }
