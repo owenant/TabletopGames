@@ -3,11 +3,15 @@ package games.dominion.metrics;
 import static games.GameType.Dominion;
 import core.AbstractPlayer;
 import evaluation.listeners.IGameListener;
+import evaluation.metrics.Event;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
 import games.dominion.DominionFGParameters;
 import games.dominion.DominionGameState;
+import core.interfaces.IStatisticLogger;
+import evaluation.listeners.StateFeatureListener;
+import games.dominion.stats.DomStateFeatures;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,8 +28,8 @@ import java.util.Collections;
 public class MetricsForDBCGs {
   public static void main(String[] args) {
       System.out.println("Entry point to metrics for DBCGs....");
-      //runTournament();
-      runMaxPayoffDeckSearch();
+      runTournament();
+      //runMaxPayoffDeckSearch();
       //testingExpPayOff();
   }
   public static void testingExpPayOff() {
@@ -85,16 +89,16 @@ public class MetricsForDBCGs {
       FileWriter fileWriter;
 
       //parameters
-      int noIndividuals = 150;
+      int noIndividuals = 50;
       int maxIterations = 10000;
       long initialPopSeed = 100;
       double probCrossOver = 0.8;
       double probMutation = 0.05;
-      int noGenerations = 400;
+      int noGenerations = 10;
       int maxChildCreationAttemptsPriorToFailure = 1000;
       int maxParentRedraws = 100;
       DominionDeckGenome.MAX_NO_OF_CARDS_OF_ANY_TYPE = 5;
-      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 20;
+      DominionDeckGenome.NO_SIMULATIONS_EXPPAYOFF = 1;
       DominionDeckGenome.MAX_COST_CONSTRAINT = 100000;
       DominionDeckGenome.MIN_COST_CONSTRAINT = 0;
 
@@ -387,8 +391,10 @@ public class MetricsForDBCGs {
       long seed = 100;
       long startTime = System.currentTimeMillis();
       String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/DominionTournamentResults";
-      String destdirListener = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners";
-
+      String destdirGenericMetrics = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/GenericMetrics";
+      String destdirDominionMetrics = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/DominionMetrics";
+      String destdirFeatures = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/Features";
+      String featureslogfile = destdirFeatures + "/featureslogfile";
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
       //agents.add(new MCTSPlayer());
@@ -410,17 +416,23 @@ public class MetricsForDBCGs {
       String listenerClass = "evaluation.listeners.MetricsGameListener";
       String genericMetricsClass = "evaluation.metrics.GameMetrics";
       String dominionMetricsClass = "games.dominion.stats.DominionMetrics";
-      IGameListener gameTracker1 = IGameListener.createListener(listenerClass, genericMetricsClass);
-      IGameListener gameTracker2 = IGameListener.createListener(listenerClass, dominionMetricsClass);
-      gameTracker1.setOutputDirectory(destdirListener);
-      gameTracker2.setOutputDirectory(destdirListener);
+      IGameListener gameTrackerGenericMetrics = IGameListener.createListener(listenerClass, genericMetricsClass);
+      IGameListener gameTrackerDominionMetrics = IGameListener.createListener(listenerClass, dominionMetricsClass);
+      DomStateFeatures features = new DomStateFeatures();
+      StateFeatureListener gameTrackerDominionFeatures = new StateFeatureListener(features, Event.GameEvent.ROUND_OVER, true);
+      IStatisticLogger statsLogger = IStatisticLogger.createLogger("evaluation.loggers.FileStatsLogger", featureslogfile);
+      gameTrackerDominionFeatures.setLogger(statsLogger);
+      gameTrackerGenericMetrics.setOutputDirectory(destdirGenericMetrics);
+      gameTrackerDominionMetrics.setOutputDirectory(destdirDominionMetrics);
+      gameTrackerDominionFeatures.setOutputDirectory(destdirFeatures);
       List<IGameListener> dominionlisteners = new ArrayList<IGameListener>();
-      dominionlisteners.add(gameTracker1);
-      dominionlisteners.add(gameTracker2);
+      dominionlisteners.add(gameTrackerGenericMetrics);
+      dominionlisteners.add(gameTrackerDominionMetrics);
+      dominionlisteners.add(gameTrackerDominionFeatures);
       tournament.setListeners(dominionlisteners);
 
       //run tournament
-      tournament.verbose = true;
+      tournament.verbose = false;
       tournament.resultsFile = filename;
       tournament.runTournament();
 

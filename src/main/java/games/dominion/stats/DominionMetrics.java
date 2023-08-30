@@ -15,12 +15,14 @@ import java.util.*;
 public class DominionMetrics implements IMetricsCollection {
 
     public static class CardsInSupplyGameEnd extends AbstractMetric {
+
         CardType[] cardTypes;
 
-        public CardsInSupplyGameEnd(){
+        public CardsInSupplyGameEnd() {
             super();
             cardTypes = CardType.values();
         }
+
         public CardsInSupplyGameEnd(String[] args) {
             super(args);
             cardTypes = new CardType[args.length];
@@ -32,7 +34,8 @@ public class DominionMetrics implements IMetricsCollection {
         @Override
         public boolean _run(MetricsGameListener listener, Event e, Map<String, Object> records) {
             for (CardType type : cardTypes) {
-                records.put(type.toString(), ((DominionGameState)e.state).cardsOfType(type, -1, DominionConstants.DeckType.SUPPLY));
+                records.put(type.toString(), ((DominionGameState) e.state).cardsOfType(type, -1,
+                    DominionConstants.DeckType.SUPPLY));
             }
             return true;
         }
@@ -53,10 +56,13 @@ public class DominionMetrics implements IMetricsCollection {
     }
 
     public static class EmptySupplySlots extends AbstractMetric {
+
         @Override
         public boolean _run(MetricsGameListener listener, Event e, Map<String, Object> records) {
-            records.put("EmptySupplySlots", (int)((DominionGameState)e.state).cardsIncludedInGame().stream()
-                    .filter(c -> ((DominionGameState)e.state).cardsOfType(c, -1, DominionConstants.DeckType.SUPPLY) == 0)
+            records.put("EmptySupplySlots",
+                (int) ((DominionGameState) e.state).cardsIncludedInGame().stream()
+                    .filter(c -> ((DominionGameState) e.state).cardsOfType(c, -1,
+                        DominionConstants.DeckType.SUPPLY) == 0)
                     .count());
             return true;
         }
@@ -70,4 +76,9 @@ public class DominionMetrics implements IMetricsCollection {
             return Collections.singletonMap("EmptySupplySlots", Integer.class);
         }
     }
+
+    //metric to record the proportion of each card in a players deck at the end of each turn
+    //public static class proportionalEncoding extends AbstractMetric {
+
+    //}
 }
