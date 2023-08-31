@@ -19,7 +19,9 @@ import java.util.Random;
 import java.lang.Math;
 import java.io.File;
 import java.io.FileWriter;
+import players.mcts.MCTSParams;
 import players.simple.RandomPlayer;
+import players.mcts.MCTSPlayer;
 import java.util.Collections;
 
 //entry point for metric calculations for DBCGs. Currently focused on Dominion
@@ -397,8 +399,12 @@ public class MetricsForDBCGs {
       String featureslogfile = destdirFeatures + "/featureslogfile";
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
-      //agents.add(new MCTSPlayer());
-      agents.add(new RandomPlayer());
+      MCTSParams paramsMCTS = new MCTSParams();
+      paramsMCTS.rolloutLength = 10;
+      paramsMCTS.maxTreeDepth = 10;
+      paramsMCTS.epsilon = 1e-6;
+      agents.add(new MCTSPlayer(paramsMCTS));
+      //agents.add(new RandomPlayer());
       agents.add(new RandomPlayer());
 
       //set-up game type and other tournament parameters

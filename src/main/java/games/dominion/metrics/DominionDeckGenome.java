@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import players.mcts.MCTSParams;
 import players.mcts.MCTSPlayer;
 import players.simple.RandomPlayer;
 
@@ -158,7 +159,11 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
       //start by setting up MCTS player which will be used to play the deck
       //parameters need to be chosen here so that the cards are played in an
       //optimal order but we also dont need to see impact of future turns
-      AbstractPlayer focusAIAgent = new MCTSPlayer();
+      MCTSParams paramsMCTS = new MCTSParams();
+      paramsMCTS.rolloutLength = 10;
+      paramsMCTS.maxTreeDepth = 10;
+      paramsMCTS.epsilon = 1e-6;
+      AbstractPlayer focusAIAgent = new MCTSPlayer(paramsMCTS);
       List<AbstractPlayer> players = Arrays.asList(focusAIAgent, new RandomPlayer());
       DominionFGParameters params = new DominionFGParameters(new Random(System.currentTimeMillis()).nextInt());
       DominionGameState state = new DominionGameState(params, players.size());
