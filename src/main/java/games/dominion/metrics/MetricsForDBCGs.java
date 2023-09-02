@@ -12,6 +12,7 @@ import games.dominion.DominionGameState;
 import core.interfaces.IStatisticLogger;
 import evaluation.listeners.StateFeatureListener;
 import games.dominion.stats.DomStateFeatures;
+import games.dominion.stats.DomPlayTrace;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -424,7 +425,8 @@ public class MetricsForDBCGs {
       String dominionMetricsClass = "games.dominion.stats.DominionMetrics";
       IGameListener gameTrackerGenericMetrics = IGameListener.createListener(listenerClass, genericMetricsClass);
       IGameListener gameTrackerDominionMetrics = IGameListener.createListener(listenerClass, dominionMetricsClass);
-      DomStateFeatures features = new DomStateFeatures();
+      //DomStateFeatures features = new DomStateFeatures();
+      DomPlayTrace features = new DomPlayTrace();
       StateFeatureListener gameTrackerDominionFeatures = new StateFeatureListener(features, Event.GameEvent.ROUND_OVER, true);
       IStatisticLogger statsLogger = IStatisticLogger.createLogger("evaluation.loggers.FileStatsLogger", featureslogfile);
       gameTrackerDominionFeatures.setLogger(statsLogger);
