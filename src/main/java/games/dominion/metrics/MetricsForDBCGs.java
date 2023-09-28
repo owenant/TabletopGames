@@ -4,10 +4,12 @@ import static games.GameType.Dominion;
 import core.AbstractPlayer;
 import evaluation.listeners.IGameListener;
 import evaluation.metrics.Event;
+import evaluation.metrics.Event.GameEvent;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
 import games.dominion.DominionFGParameters;
+import games.dominion.DominionSDParameters;
 import games.dominion.DominionGameState;
 import core.interfaces.IStatisticLogger;
 import evaluation.listeners.StateFeatureListener;
@@ -20,9 +22,13 @@ import java.util.Random;
 import java.lang.Math;
 import java.io.File;
 import java.io.FileWriter;
+import players.PlayerFactory;
 import players.mcts.MCTSParams;
 import players.simple.RandomPlayer;
 import players.mcts.MCTSPlayer;
+import players.rhea.RHEAPlayer;
+import players.PlayerFactory;
+import games.dominion.players.BigMoney;
 import java.util.Collections;
 
 //entry point for metric calculations for DBCGs. Currently focused on Dominion
@@ -31,10 +37,124 @@ import java.util.Collections;
 public class MetricsForDBCGs {
   public static void main(String[] args) {
       System.out.println("Entry point to metrics for DBCGs....");
-      runTournament();
+      simpleTournament();
+      //runTournament();
       //runMaxPayoffDeckSearch();
       //testingExpPayOff();
   }
+
+  public static void simpleTournament(){
+      //String destdirFeatures = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/Features";
+      String destdirFeatures = "/Users/anthonyowen/GitProjects/PlayTraces/Data";
+      String featureslogfile = destdirFeatures + "/featureslogfile.txt";
+      String mctsJsonDir = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/JSON for Dominion MCTS";
+      String fileMCTSJson = mctsJsonDir + "/DominionFG_2P_64+ms.json";
+      //String fileMCTSJson = mctsJsonDir + "/DominionFG_4P_256+ms.json";
+
+      //first set-up AI agents
+      LinkedList<AbstractPlayer> agents = new LinkedList<>();
+      //create a player factory ot create MCTS from JSON files;
+      MCTSPlayer mctsplayer = (MCTSPlayer) PlayerFactory.createPlayer(fileMCTSJson);
+      //MCTSParams paramsMCTS = new MCTSParams();
+      //paramsMCTS.rolloutLength = 100;
+      //paramsMCTS.maxTreeDepth = 100;
+      //paramsMCTS.epsilon = 1e-6;
+      //agents.add(new BigMoney());
+      agents.add(new RandomPlayer());
+      agents.add(mctsplayer);
+      //agents.add(new MCTSPlayer(paramsMCTS));
+      //agents.add(new RHEAPlayer());
+      //agents.add(new RandomPlayer());
+
+      //set-up game type and other tournament parameters
+      GameType gameToPlay = Dominion;
+      int playersPerGame = 2;
+      int gamesPerMatchup = 50;
+      TournamentMode mode = TournamentMode.SELF_PLAY;
+      long seed = System.currentTimeMillis();
+      //bug with seed 16958
+      //long seed = 16958;
+      System.out.println(seed);
+      DominionFGParameters params = new DominionFGParameters(seed);
+      //DominionSDParameters params = new DominionSDParameters(seed);
+
+      //set-up tournament
+      RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
+          gamesPerMatchup, mode, params);
+
+      //set-up listeners
+      DomPlayTrace features = new DomPlayTrace();
+      StateFeatureListener gameTrackerDominionFeatures = new StateFeatureListener(features, GameEvent.TURN_OVER, false);
+      IStatisticLogger statsLogger = IStatisticLogger.createLogger("evaluation.loggers.FileStatsLogger", featureslogfile);
+      gameTrackerDominionFeatures.setLogger(statsLogger);
+      gameTrackerDominionFeatures.setOutputDirectory(destdirFeatures);
+      List<IGameListener> dominionlisteners = new ArrayList<IGameListener>();
+      dominionlisteners.add(gameTrackerDominionFeatures);
+      tournament.setListeners(dominionlisteners);
+
+      //run tournament
+      tournament.runTournament();
+  }
+  public static void runTournament(){
+    System.out.println("Run tournament....");
+    //long seed = 100;
+    long startTime = System.currentTimeMillis();
+    String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/DominionTournamentResults";
+    String destdirGenericMetrics = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/GenericMetrics";
+    String destdirDominionMetrics = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/DominionMetrics";
+    String destdirFeatures = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/Features";
+    String featureslogfile = destdirFeatures + "/featureslogfile.txt";
+    String mctsJsonDir = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/JSON for Dominion MCTS";
+    String fileMCTSJson = mctsJsonDir + "/DominionFG_2P_64+ms.json";
+
+    //first set-up AI agents
+    LinkedList<AbstractPlayer> agents = new LinkedList<>();
+    MCTSPlayer mctsplayer = (MCTSPlayer) PlayerFactory.createPlayer(fileMCTSJson);
+    agents.add(new RandomPlayer());
+    agents.add(mctsplayer);
+
+    //set-up game type and other tournament parameters
+    GameType gameToPlay = Dominion;
+    int playersPerGame = 2;
+    int gamesPerMatchup = 50;
+    TournamentMode mode = TournamentMode.SELF_PLAY;
+    DominionFGParameters params = new DominionFGParameters(startTime);
+
+    //set-up tournament
+    RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
+        gamesPerMatchup, mode, params);
+
+    // Add listeners
+    String listenerClass = "evaluation.listeners.MetricsGameListener";
+    String genericMetricsClass = "evaluation.metrics.GameMetrics";
+    String dominionMetricsClass = "games.dominion.stats.DominionMetrics";
+    IGameListener gameTrackerGenericMetrics = IGameListener.createListener(listenerClass, genericMetricsClass);
+    IGameListener gameTrackerDominionMetrics = IGameListener.createListener(listenerClass, dominionMetricsClass);
+    DomStateFeatures features = new DomStateFeatures();
+    //DomPlayTrace features = new DomPlayTrace();
+    StateFeatureListener gameTrackerDominionFeatures = new StateFeatureListener(features, Event.GameEvent.ROUND_OVER, true);
+    IStatisticLogger statsLogger = IStatisticLogger.createLogger("evaluation.loggers.FileStatsLogger", featureslogfile);
+    gameTrackerDominionFeatures.setLogger(statsLogger);
+    gameTrackerGenericMetrics.setOutputDirectory(destdirGenericMetrics);
+    gameTrackerDominionMetrics.setOutputDirectory(destdirDominionMetrics);
+    gameTrackerDominionFeatures.setOutputDirectory(destdirFeatures);
+    List<IGameListener> dominionlisteners = new ArrayList<IGameListener>();
+    dominionlisteners.add(gameTrackerGenericMetrics);
+    dominionlisteners.add(gameTrackerDominionMetrics);
+    dominionlisteners.add(gameTrackerDominionFeatures);
+    tournament.setListeners(dominionlisteners);
+
+    //run tournament
+    tournament.verbose = false;
+    tournament.resultsFile = filename;
+    tournament.runTournament();
+
+    long elapsedTime = System.currentTimeMillis() - startTime;
+    long elapsedSeconds = elapsedTime / 1000;
+    long secondsDisplay = elapsedSeconds % 60;
+    long elapsedMinutes = elapsedSeconds / 60;
+    System.out.printf("Tournament completed in %d minutes and %d seconds", elapsedMinutes, elapsedSeconds);
+}
   public static void testingExpPayOff() {
       //testing no of simulations for expected payoff
       String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Testing/ExpPayOffConvergence";
@@ -387,67 +507,5 @@ public class MetricsForDBCGs {
           }
       }
       return pop;
-  }
-
-  public static void runTournament(){
-      System.out.println("Run tournament....");
-      long seed = 100;
-      long startTime = System.currentTimeMillis();
-      String filename = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/DominionTournamentResults";
-      String destdirGenericMetrics = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/GenericMetrics";
-      String destdirDominionMetrics = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/DominionMetrics";
-      String destdirFeatures = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/Listeners/Features";
-      String featureslogfile = destdirFeatures + "/featureslogfile";
-      //first set-up AI agents
-      LinkedList<AbstractPlayer> agents = new LinkedList<>();
-      MCTSParams paramsMCTS = new MCTSParams();
-      paramsMCTS.rolloutLength = 10;
-      paramsMCTS.maxTreeDepth = 10;
-      paramsMCTS.epsilon = 1e-6;
-      agents.add(new MCTSPlayer(paramsMCTS));
-      //agents.add(new RandomPlayer());
-      agents.add(new RandomPlayer());
-
-      //set-up game type and other tournament parameters
-      GameType gameToPlay = Dominion;
-      int playersPerGame = 2;
-      int gamesPerMatchup = 5;
-      TournamentMode mode = TournamentMode.SELF_PLAY;
-      DominionFGParameters params = new DominionFGParameters(seed);
-
-      //set-up tournament
-      RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
-          gamesPerMatchup, mode, params);
-
-      // Add listeners
-      String listenerClass = "evaluation.listeners.MetricsGameListener";
-      String genericMetricsClass = "evaluation.metrics.GameMetrics";
-      String dominionMetricsClass = "games.dominion.stats.DominionMetrics";
-      IGameListener gameTrackerGenericMetrics = IGameListener.createListener(listenerClass, genericMetricsClass);
-      IGameListener gameTrackerDominionMetrics = IGameListener.createListener(listenerClass, dominionMetricsClass);
-      //DomStateFeatures features = new DomStateFeatures();
-      DomPlayTrace features = new DomPlayTrace();
-      StateFeatureListener gameTrackerDominionFeatures = new StateFeatureListener(features, Event.GameEvent.ROUND_OVER, true);
-      IStatisticLogger statsLogger = IStatisticLogger.createLogger("evaluation.loggers.FileStatsLogger", featureslogfile);
-      gameTrackerDominionFeatures.setLogger(statsLogger);
-      gameTrackerGenericMetrics.setOutputDirectory(destdirGenericMetrics);
-      gameTrackerDominionMetrics.setOutputDirectory(destdirDominionMetrics);
-      gameTrackerDominionFeatures.setOutputDirectory(destdirFeatures);
-      List<IGameListener> dominionlisteners = new ArrayList<IGameListener>();
-      dominionlisteners.add(gameTrackerGenericMetrics);
-      dominionlisteners.add(gameTrackerDominionMetrics);
-      dominionlisteners.add(gameTrackerDominionFeatures);
-      tournament.setListeners(dominionlisteners);
-
-      //run tournament
-      tournament.verbose = false;
-      tournament.resultsFile = filename;
-      tournament.runTournament();
-
-      long elapsedTime = System.currentTimeMillis() - startTime;
-      long elapsedSeconds = elapsedTime / 1000;
-      long secondsDisplay = elapsedSeconds % 60;
-      long elapsedMinutes = elapsedSeconds / 60;
-      System.out.printf("Tournament completed in %d minutes and %d seconds", elapsedMinutes, elapsedSeconds);
   }
 }

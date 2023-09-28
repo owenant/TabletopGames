@@ -162,6 +162,7 @@ public class DominionGameState extends AbstractGameState implements IPrintable {
         return totalTreasureInHand - spentSoFar + additionalSpendAvailable;
     }
 
+
     public void addDelayedAction(IDelayedAction action) {
         delayedActions.add(action);
     }

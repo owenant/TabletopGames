@@ -22,35 +22,45 @@ public class BigMoney extends AbstractPlayer {
     public AbstractAction _getAction(AbstractGameState gameState, List<AbstractAction> actions) {
         DominionGameState state = (DominionGameState) gameState;
         int player = gameState.getCurrentPlayer();
-        int cash = state.availableSpend(player);
-        int provinces = state.getCardsIncludedInGame().getOrDefault(CardType.PROVINCE, 0);
 
-        if (state.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
-            return new EndPhase();
+        //check that agent is in the buy phase
+        if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
+        {
+            //check to see if we need to discard cards otherwise return EndPhase
+            if (state.getGamePhase() != DominionGameState.DominionGamePhase.Buy) {
+                //TODO: chack to see if all actions are discard and then throw away
+                //the cheapest card
+                return actions.get(0);
+            }else{
+                return new EndPhase();
+            }
+        }else{
+            int cash = state.availableSpend(player);
+            int provinces = state.getCardsIncludedInGame().getOrDefault(CardType.PROVINCE, 0);
 
-        switch (cash) {
-            case 0:
-            case 1:
-                return new EndPhase();
-            case 2:
-                if (provinces < 4 && actions.contains(new BuyCard(CardType.ESTATE, player)))
-                    return new BuyCard(CardType.ESTATE, player);
-                return new EndPhase();
-            case 3:
-            case 4:
-                return new BuyCard(CardType.SILVER, player);
-            case 5:
-                if (provinces < 6 && actions.contains(new BuyCard(CardType.DUCHY, player)))
-                    return new BuyCard(CardType.DUCHY, player);
-                else
+            switch (cash) {
+                case 0:
+                case 1:
+                    return new EndPhase();
+                case 2:
+                    if (provinces < 4 && actions.contains(new BuyCard(CardType.ESTATE, player)))
+                        return new BuyCard(CardType.ESTATE, player);
+                    return new EndPhase();
+                case 3:
+                case 4:
                     return new BuyCard(CardType.SILVER, player);
-            case 6:
-            case 7:
-                return new BuyCard(CardType.GOLD, player);
-            default:
-                return new BuyCard(CardType.PROVINCE, player);
+                case 5:
+                    if (provinces < 6 && actions.contains(new BuyCard(CardType.DUCHY, player)))
+                        return new BuyCard(CardType.DUCHY, player);
+                    else
+                        return new BuyCard(CardType.SILVER, player);
+                case 6:
+                case 7:
+                    return new BuyCard(CardType.GOLD, player);
+                default:
+                    return new BuyCard(CardType.PROVINCE, player);
 
-
+            }
         }
     }
 
