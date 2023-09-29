@@ -49,14 +49,10 @@ import games.uno.gui.*;
 import games.virus.*;
 import games.dicemonastery.*;
 import games.dominion.*;
-<<<<<<< HEAD
-import games.battlecards.*;
-=======
 import games.wonders7.Wonders7ForwardModel;
 import games.wonders7.Wonders7GameParameters;
 import games.wonders7.Wonders7GameState;
 import games.wonders7.gui.Wonders7GUI;
->>>>>>> upstream/master
 import gametemplate.GTForwardModel;
 import gametemplate.GTGUIManager;
 import gametemplate.GTGameState;
@@ -196,7 +192,6 @@ public enum GameType {
             Arrays.asList(Strategy, Bluffing, Deduction, Abstract),
             Arrays.asList(Memory, GridMovement),
             ResGameState.class, ResForwardModel.class, ResParameters.class, ResGUIManager.class);
-
     // Core classes where the game is defined
     final Class<? extends AbstractGameState> gameStateClass;
     final Class<? extends AbstractForwardModel> forwardModelClass;
