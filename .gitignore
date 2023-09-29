@@ -31,7 +31,15 @@ target/classes/META-INF/ModernBoardGame.kotlin_module
 out/production/ModernBoardGame/META-INF/
 
 javadoc/
+
+src/main/java/META-INF/MANIFEST.MF
+
+src/pytag/env/
 metrics/out/*
+<<<<<<< HEAD
 ResultsFiles/*
 
 *.DS_Store
+=======
+treeRecorder*
+>>>>>>> upstream/master

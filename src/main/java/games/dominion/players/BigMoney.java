@@ -19,21 +19,17 @@ public class BigMoney extends AbstractPlayer {
      * @param gameState observation of the current game state
      */
     @Override
-    public AbstractAction _getAction(AbstractGameState gameState, List<AbstractAction> actions) {
+    public AbstractAction _getAction(AbstractGameState gameState, List<AbstractAction> possibleActions) {
         DominionGameState state = (DominionGameState) gameState;
         int player = gameState.getCurrentPlayer();
+        //List<AbstractAction> actions = getForwardModel().computeAvailableActions(gameState, getParameters().actionSpace);
 
         //check that agent is in the buy phase
         if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
         {
-            //check to see if we need to discard cards otherwise return EndPhase
-            if (state.getGamePhase() != DominionGameState.DominionGamePhase.Buy) {
-                //TODO: chack to see if all actions are discard and then throw away
-                //the cheapest card
-                return actions.get(0);
-            }else{
-                return new EndPhase();
-            }
+            //TODO: check to see if all actions are discard and then throw away
+            //the cheapest card
+            return possibleActions.get(0);
         }else{
             int cash = state.availableSpend(player);
             int provinces = state.getCardsIncludedInGame().getOrDefault(CardType.PROVINCE, 0);
@@ -43,14 +39,14 @@ public class BigMoney extends AbstractPlayer {
                 case 1:
                     return new EndPhase();
                 case 2:
-                    if (provinces < 4 && actions.contains(new BuyCard(CardType.ESTATE, player)))
+                    if (provinces < 4 && possibleActions.contains(new BuyCard(CardType.ESTATE, player)))
                         return new BuyCard(CardType.ESTATE, player);
                     return new EndPhase();
                 case 3:
                 case 4:
                     return new BuyCard(CardType.SILVER, player);
                 case 5:
-                    if (provinces < 6 && actions.contains(new BuyCard(CardType.DUCHY, player)))
+                    if (provinces < 6 && possibleActions.contains(new BuyCard(CardType.DUCHY, player)))
                         return new BuyCard(CardType.DUCHY, player);
                     else
                         return new BuyCard(CardType.SILVER, player);

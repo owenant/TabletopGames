@@ -2,15 +2,22 @@ package core;
 
 import core.actions.AbstractAction;
 import core.actions.LogEvent;
-import core.components.*;
-import core.interfaces.*;
+import core.components.Area;
+import core.components.Component;
+import core.components.PartialObservableDeck;
+import core.interfaces.IComponentContainer;
+import core.interfaces.IExtendedSequence;
+import core.interfaces.IGameEvent;
+import core.interfaces.IGamePhase;
 import evaluation.listeners.IGameListener;
 import evaluation.metrics.Event;
 import games.GameType;
 import utilities.ElapsedCpuChessTimer;
 
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static core.CoreConstants.GameResult.GAME_ONGOING;
 import static java.util.stream.Collectors.toList;
@@ -39,6 +46,7 @@ public abstract class AbstractGameState {
     // Migrated from TurnOrder...may move later
     protected int roundCounter, turnCounter, turnOwner, firstPlayer;
     protected int nPlayers;
+    protected int nTeams;
     protected List<IGameListener> listeners = new ArrayList<>();
 
     // Timers for all players
@@ -63,6 +71,8 @@ public abstract class AbstractGameState {
      */
     public AbstractGameState(AbstractParameters gameParameters, int nPlayers) {
         this.nPlayers = nPlayers;
+        this.nTeams = nPlayers;  // we always default the number of teams to the number of players
+        // this is then overridden in the game-specific constructor if needed
         this.gameParameters = gameParameters;
         this.coreGameParameters = new CoreParameters();
     }
@@ -107,10 +117,31 @@ public abstract class AbstractGameState {
         return this.gameParameters;
     }
     public int getNPlayers() { return nPlayers; }
+    public int getNTeams() { return nTeams; }
+    /**
+     * Returns the team number the specified player is on.
+     * This defaults to one team per player and should be overridden
+     * in child classes if relevant to the game
+     */
+    public int getTeam(int player) { return player;}
     public int getCurrentPlayer() {
         return isActionInProgress() ? actionsInProgress.peek().getCurrentPlayer(this) : turnOwner;
     }
     public final CoreConstants.GameResult[] getPlayerResults() {return playerResults;}
+    public final Set<Integer> getWinners() {
+        Set<Integer> winners = new HashSet<>();
+        for (int i = 0; i < playerResults.length; i++) {
+            if (playerResults[i] == CoreConstants.GameResult.WIN_GAME) winners.add(i);
+        }
+        return winners;
+    }
+    public final Set<Integer> getTied() {
+        Set<Integer> tied = new HashSet<>();
+        for (int i = 0; i < playerResults.length; i++) {
+            if (playerResults[i] == CoreConstants.GameResult.DRAW_GAME) tied.add(i);
+        }
+        return tied;
+    }
     public final IGamePhase getGamePhase() {
         return gamePhase;
     }
@@ -201,6 +232,7 @@ public abstract class AbstractGameState {
         addAllComponents(); // otherwise the list of allComponents is only ever updated when we copy the state!
         return allComponents;
     }
+    public double[] getFeatureVector() {return null;} //Gets a feature vector for games that have it, otherwise returns null
 
     /**
      * While getAllComponents() returns an Area containing every component, this method
@@ -293,16 +325,23 @@ public abstract class AbstractGameState {
 
     // helper function to avoid time-consuming string manipulations if the message is not actually
     // going to be logged anywhere
-    public void logEvent(Supplier<String> eventText) {
+    public void logEvent(IGameEvent event, Supplier<String> eventText) {
         if (listeners.isEmpty() && !getCoreGameParameters().recordEventHistory)
             return; // to avoid expensive string manipulations
-        logEvent(eventText.get());
+        logEvent(event, eventText.get());
     }
-    public void logEvent(String eventText) {
-        AbstractAction logAction = new LogEvent(eventText);
-        listeners.forEach(l -> l.onEvent(Event.createEvent(Event.GameEvent.GAME_EVENT, this, logAction)));
+    public void logEvent(IGameEvent event, String eventText) {
+        LogEvent logAction = new LogEvent(eventText);
+        listeners.forEach(l -> l.onEvent(Event.createEvent(event, this, logAction)));
         if (getCoreGameParameters().recordEventHistory) {
             recordHistory(eventText);
+        }
+    }
+    public void logEvent(IGameEvent event) {
+        LogEvent logAction = new LogEvent(event.name());
+        listeners.forEach(l -> l.onEvent(Event.createEvent(event, this, logAction)));
+        if (getCoreGameParameters().recordEventHistory) {
+            recordHistory(event.name());
         }
     }
 
@@ -325,11 +364,12 @@ public abstract class AbstractGameState {
         return !actionsInProgress.empty();
     }
 
-    public final void setActionInProgress(IExtendedSequence action) {
+    public final boolean setActionInProgress(IExtendedSequence action) {
         if (action == null && !actionsInProgress.isEmpty())
             actionsInProgress.pop();
         else
             actionsInProgress.push(action);
+        return true;
     }
 
     final void checkActionsInProgress() {

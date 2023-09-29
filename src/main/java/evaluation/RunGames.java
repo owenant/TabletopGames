@@ -2,28 +2,49 @@ package evaluation;
 
 import core.AbstractParameters;
 import core.AbstractPlayer;
+import core.interfaces.IGameRunner;
 import evaluation.listeners.IGameListener;
-import evaluation.tournaments.AbstractTournament.TournamentMode;
+import evaluation.tournaments.AbstractTournament;
 import evaluation.tournaments.RandomRRTournament;
 import evaluation.tournaments.RoundRobinTournament;
+import evaluation.tournaments.SkillGrid;
 import games.GameType;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import players.PlayerFactory;
-import players.mcts.BasicMCTSPlayer;
+import players.PlayerType;
+import players.basicMCTS.BasicMCTSPlayer;
 import players.mcts.MCTSPlayer;
 import players.rmhc.RMHCPlayer;
 import players.simple.OSLAPlayer;
 import players.simple.RandomPlayer;
 import utilities.Pair;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
+import static evaluation.RunArg.*;
 import static evaluation.tournaments.AbstractTournament.TournamentMode.*;
 import static java.util.stream.Collectors.toList;
-import static utilities.Utils.getArg;
 
 
-public class RunGames {
+public class RunGames implements IGameRunner {
+
+    // Config
+    Map<RunArg, Object> config = new HashMap<>();
+
+    // Vars for running
+    Map<GameType, int[]> gamesAndPlayerCounts;
+    private LinkedList<AbstractPlayer> agents;
+    private AbstractPlayer focus;
+    private AbstractTournament.TournamentMode tournamentMode;
+    private String timeDir;
 
     /**
      * Main function, creates and runs the tournament with the given settings and players.
@@ -32,101 +53,72 @@ public class RunGames {
     public static void main(String[] args) {
         List<String> argsList = Arrays.asList(args);
         if (argsList.contains("--help") || argsList.contains("-h")) {
-            System.out.println(
-                    "There are a number of possible arguments:\n" +
-                            "\tgame=          A list of the games to be played. If there is more than one, then use a \n" +
-                            "\t               pipe-delimited list, for example game=Uno|ColtExpress|Pandemic.\n" +
-                            "\t               The default is 'all' to indicate that all games should be analysed.\n" +
-                            "\t               Specifying all|-name1|-name2... will run all games except for name1, name2...\n" +
-                            "\tnPlayers=      The total number of players in each game (the default is 'all') \n " +
-                            "\t               A range can also be specified, for example 3-5. \n " +
-                            "\t               Different player counts can be specified for each game in pipe-delimited format.\n" +
-                            "\t               If 'all' is specified, then every possible playerCount for the game will be analysed.\n" +
-                            "\tverbose=       If true, then the result of each game is reported. Default is false.\n"+
-                            "\tplayers=       The directory containing agent JSON files for the competing Players\n" +
-                            "\t               If not specified, this defaults to very basic OSLA, RND, RHEA and MCTS players.\n" +
-                            "\tmode=          exhaustive|random - defaults to exhaustive.\n" +
-                            "\t               'exhaustive' will iterate exhaustively through every possible permutation: \n" +
-                            "\t               every possible player in every possible position, and run a number of games equal to 'matchups'\n" +
-                            "\t               for each. This can be excessive for a large number of players." +
-                            "\t               'random' will have a random matchup, while ensuring no duplicates, and that all players get the\n" +
-                            "\t               the same number of games in total.\n" +
-                            "\t               If a focusPlayer is provided, then this is ignored.\n" +
-                            "\tmatchups=      The total number of matchups to run if mode=random...\n" +
-                            "\t               ...or the number of matchups to run per combination of players if mode=exhaustive\n" +
-                            "\tdestDir=       The directory to which the results will be written. Defaults to 'metrics/out'.\n" +
-                            "\t               If (and only if) this is being run for multiple games/player counts, then a subdirectory\n" +
-                            "\t               will be created for each game, and then within that for  each player count combination.\n" +
-                            "\taddTimestamp=  (Optional) If true (default is false), then the results will be written to a subdirectory of destDir.\n" +
-                            "\t               This may be useful if you want to use the same destDir for multiple experiments.\n" +
-                            "\tlistener=      The full class name of an IGameListener implementation. Or the location\n" +
-                            "\t               of a json file from which a listener can be instantiated.\n" +
-                            "\t               Defaults to evaluation.metrics.MetricsGameListener. \n" +
-                            "\t               A pipe-delimited string can be provided to gather many types of statistics \n" +
-                            "\t               from the same set of games.\n" +
-                            "\tmetrics=       (Optional) The full class name of an IMetricsCollection implementation. " +
-                            "\t               The recommended usage is to include these in the JSON file that defines the listener,\n" +
-                            "\t               but this option is here for quick and dirty tests.\n" +
-                            "\tfocusPlayer=   (Optional) A JSON file that defines the 'focus' of the tournament.\n" +
-                            "\t               The 'focus' player will be present in every single game.\n" +
-                            "\t               In this case 'matchups' defines the number of games to be run with the focusPlayer\n" +
-                            "\t               in each position. The other positions will be filled randomly from players.\n" +
-                            "\tgameParams=    (Optional) A JSON file from which the game parameters will be initialised.\n" +
-                            "\tselfPlay=      (Optional) If true, then multiple copies of the same agent can be in one game.\n" +
-                            "\t               Defaults to false\n" +
-                            "\treportPeriod=  (Optional) For random mode execution only, after how many games played results are reported.\n" +
-                            "\t               Defaults to the end of the tournament\n" +
-                            "\trandomGameParams= (Optional) If specified, parameters for the game will be randomized for each game, and printed before the run.\n" +
-                            "\toutput=        (Optional) If specified, the summary results will be written to a file with this name.\n"
-
-            );
+            RunArg.printHelp(Usage.RunGames);
             return;
         }
+
         /* 1. Settings for the tournament */
-        Map<GameType, int[]> gamesAndPlayerCounts = initialiseGamesAndPlayerCount(args);
+        RunGames runGames = new RunGames();
+        runGames.config = parseConfig(args, Usage.RunGames);
 
-        boolean selfPlay = getArg(args, "selfPlay", false);
-        String mode = getArg(args, "mode", "random");
-        int matchups = getArg(args, "matchups", 1);
-        String playerDirectory = getArg(args, "players", "");
-        String focusPlayer = getArg(args, "focusPlayer", "");
+        String setupFile = runGames.config.getOrDefault(RunArg.config, "").toString();
+        if (!setupFile.equals("")) {
+            // Read from file instead
+            try {
+                FileReader reader = new FileReader(setupFile);
+                JSONParser parser = new JSONParser();
+                JSONObject json = (JSONObject) parser.parse(reader);
+                runGames.config = parseConfig(json, Usage.RunGames);
+            } catch (FileNotFoundException ignored) {
+                throw new AssertionError("Config file not found : " + setupFile);
+                //    parseConfig(runGames, args);
+            } catch (IOException | ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        runGames.initialiseGamesAndPlayerCount();
+        if (!runGames.config.get(RunArg.gameParams).equals("") && runGames.gamesAndPlayerCounts.keySet().size() > 1)
+            throw new IllegalArgumentException("Cannot yet provide a gameParams argument if running multiple games");
 
-        String destDir = getArg(args, "destDir", "metrics/out");
-        boolean addTimestamp = getArg(args, "addTimestamp", false);
-        int reportPeriod = getArg(args, "reportPeriod", matchups);
-        boolean verbose = getArg(args, "verbose", false);
-        String resultsFile = getArg(args, "output", "");
-
-        List<String> listenerClasses = new ArrayList<>(Arrays.asList(getArg(args, "listener", "evaluation.listeners.MetricsGameListener").split("\\|")));
-        String metricsClass = getArg(args, "metrics", "evaluation.metrics.GameMetrics");
+        // 2. Setup
 
         LinkedList<AbstractPlayer> agents = new LinkedList<>();
-        if (!playerDirectory.equals("")) {
-            agents.addAll(PlayerFactory.createPlayers(playerDirectory));
+        if (!runGames.config.get(playerDirectory).equals("")) {
+            agents.addAll(PlayerFactory.createPlayers((String) runGames.config.get(playerDirectory)));
         } else {
-            /* 2. Set up players */
             agents.add(new MCTSPlayer());
-            agents.add(new BasicMCTSPlayer());
+//            agents.add(new BasicMCTSPlayer());
             agents.add(new RandomPlayer());
             agents.add(new RMHCPlayer());
             agents.add(new OSLAPlayer());
         }
-        AbstractPlayer focus = null;
-        if (!focusPlayer.equals("")) {
-            focus = PlayerFactory.createPlayer(focusPlayer);
-            agents.add(0, focus);  // convention is that they go first in the list of agents
+        runGames.agents = agents;
+
+        runGames.focus = null;
+        if (!runGames.config.get(focusPlayer).equals("")) {
+            runGames.config.put(mode, "exhaustive"); // this is irrelevant in this case
+            runGames.focus = PlayerFactory.createPlayer((String) runGames.config.get(focusPlayer));
+            agents.add(0, runGames.focus);  // convention is that they go first in the list of agents
         }
 
-        String gameParams = getArg(args, "gameParams", "");
-        if (!gameParams.equals("") && gamesAndPlayerCounts.keySet().size() > 1)
-            throw new IllegalArgumentException("Cannot yet provide a gameParams argument if running multiple games");
+        runGames.tournamentMode = ((boolean) runGames.config.get(selfPlay)) ? SELF_PLAY : NO_SELF_PLAY;
+        if (runGames.focus != null)
+            runGames.tournamentMode = ONE_VS_ALL;
 
-        TournamentMode tournamentMode = selfPlay ? SELF_PLAY : NO_SELF_PLAY;
-        if (focus != null)
-            tournamentMode = ONE_VS_ALL;
+        runGames.timeDir = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
 
-        String timeDir = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+        // 3. Run!
+        if (runGames.config.get(mode).equals("sequential")) {
+            SkillGrid main = new SkillGrid(agents, runGames.config);
+            main.run();
+        } else {
+            runGames.run();
+        }
+    }
 
+
+    @Override
+    public void run() {
         // Now we loop over each game and player count combination
         for (GameType gameType : gamesAndPlayerCounts.keySet()) {
             String gameName = gameType.name();
@@ -136,41 +128,46 @@ public class RunGames {
                 System.out.printf("Game: %s, Players: %d\n", gameName, playerCount);
                 String playersDir = playerCount + "-players";
 
-                AbstractParameters params = gameParams.equals("") ? null : AbstractParameters.createFromFile(gameType, gameParams);
+                AbstractParameters params = config.get(gameParams).equals("") ? null : AbstractParameters.createFromFile(gameType, (String) config.get(gameParams));
 
-                RoundRobinTournament tournament = mode.equals("exhaustive") || tournamentMode == ONE_VS_ALL ?
-                        new RoundRobinTournament(agents, gameType, playerCount, matchups, tournamentMode, params) :
-                        new RandomRRTournament(agents, gameType, playerCount, tournamentMode, matchups, reportPeriod,
-                                System.currentTimeMillis(), params);
+                RoundRobinTournament tournament = config.get(mode).equals("exhaustive") || tournamentMode == ONE_VS_ALL ?
+                        new RoundRobinTournament(agents, gameType, playerCount, (int) config.get(matchups), tournamentMode, params, (boolean) config.get(byTeam)) :
+                        new RandomRRTournament(agents, gameType, playerCount, tournamentMode, (int) config.get(matchups), (int) config.get(reportPeriod),
+                                System.currentTimeMillis(), params, (boolean) config.get(byTeam));
 
                 // Add listeners
-                for (String listenerClass : listenerClasses) {
-                    IGameListener gameTracker = IGameListener.createListener(listenerClass, metricsClass);
+                //noinspection unchecked
+                for (String listenerClass : ((List<String>) config.get(listener))) {
+                    IGameListener gameTracker = IGameListener.createListener(listenerClass, (String) config.get(metrics));
                     tournament.addListener(gameTracker);
-                    List<String> directories = new ArrayList<>();
-                    directories.add(destDir);
+                    String outputDir = (String) config.get(destDir);
+                    List<String> directories = new ArrayList<>(Arrays.asList(outputDir.split(Pattern.quote(File.separator))));
                     if (gamesAndPlayerCounts.size() > 1)
                         directories.add(gameName);
                     if (gamesAndPlayerCounts.get(gameType).length > 1)
                         directories.add(playersDir);
-                    if (addTimestamp)
+                    if ((boolean) config.get(addTimeStamp))
                         directories.add(timeDir);
                     gameTracker.setOutputDirectory(directories.toArray(new String[0]));
                 }
 
                 // run tournament
-                tournament.setVerbose(verbose);
-                tournament.setResultsFile(resultsFile);
-                tournament.setRandomGameParams(getArg(args, "randomGameParams", false));
-                tournament.runTournament();
+                tournament.setRandomSeed((Number) config.get(RunArg.seed));
+                tournament.setVerbose((boolean) config.get(verbose));
+                tournament.setResultsFile((String) config.get(output));
+                tournament.setRandomGameParams((boolean) config.get(randomGameParams));
+                tournament.run();
             }
         }
-
-
     }
 
-    private static Map<GameType, int[]> initialiseGamesAndPlayerCount(String[] args) {
-        List<String> tempGames = new ArrayList<>(Arrays.asList(getArg(args, "game", "all").split("\\|")));
+    private void initialiseGamesAndPlayerCount() {
+        String gameArg = config.get(RunArg.game).toString();
+        String playerRange = config.get(RunArg.playerRange).toString();
+        int np = (int) config.get(RunArg.nPlayers);
+        if (np > 0)
+            playerRange = String.valueOf(np);
+        List<String> tempGames = new ArrayList<>(Arrays.asList(gameArg.split("\\|")));
         List<String> games = tempGames;
         if (tempGames.get(0).equals("all")) {
             tempGames.add("-GameTemplate"); // so that  we always remove this one
@@ -178,7 +175,7 @@ public class RunGames {
         }
 
         // This creates a <MinPlayer, MaxPlayer> Pair for each game#
-        List<Pair<Integer, Integer>> nPlayers = Arrays.stream(getArg(args, "nPlayers", "all").split("\\|"))
+        List<Pair<Integer, Integer>> nPlayers = Arrays.stream(playerRange.split("\\|"))
                 .map(str -> {
                     if (str.contains("-")) {
                         int hyphenIndex = str.indexOf("-");
@@ -202,19 +199,27 @@ public class RunGames {
         // And repair min/max player counts that were specified incorrectly
         for (int i = 0; i < nPlayers.size(); i++) {
             GameType game = GameType.valueOf(games.get(i));
+            int max = game.getMaxPlayers();
+
+            // Cap max number of players to those available in the framework if no player directory specified
+            // (in which case the framework will use 1 of each default players)
+            if (config.get(playerDirectory).equals("") && max > PlayerType.values().length - 2) {
+                max = PlayerType.values().length - 2;  // Ignore the 2 human players (console, GUI)
+            }
+
             if (nPlayers.get(i).a == -1) {
-                nPlayers.set(i, new Pair<>(game.getMinPlayers(), game.getMaxPlayers()));
+                nPlayers.set(i, new Pair<>(game.getMinPlayers(), max));
             }
             if (nPlayers.get(i).a < game.getMinPlayers())
                 nPlayers.set(i, new Pair<>(game.getMinPlayers(), nPlayers.get(i).b));
-            if (nPlayers.get(i).b > game.getMaxPlayers())
-                nPlayers.set(i, new Pair<>(nPlayers.get(i).a, game.getMaxPlayers()));
+            if (nPlayers.get(i).b > max)
+                nPlayers.set(i, new Pair<>(nPlayers.get(i).a, max));
         }
 
         if (nPlayers.size() > 1 && nPlayers.size() != games.size())
             throw new IllegalArgumentException("If specified, then nPlayers length must be one, or match the length of the games list");
 
-        Map<GameType, int[]> gamesAndPlayerCounts = new LinkedHashMap<>();
+        gamesAndPlayerCounts = new LinkedHashMap<>();
         for (int i = 0; i < games.size(); i++) {
             GameType game = GameType.valueOf(games.get(i));
             int minPlayers = nPlayers.get(i).a;
@@ -225,7 +230,5 @@ public class RunGames {
             Arrays.setAll(playerCounts, n -> n + minPlayers);
             gamesAndPlayerCounts.put(game, playerCounts);
         }
-        return gamesAndPlayerCounts;
     }
-
 }

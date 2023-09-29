@@ -1,15 +1,18 @@
 package evaluation.listeners;
 
 import core.Game;
-import core.interfaces.IStatisticLogger;
-import evaluation.metrics.*;
+import evaluation.metrics.AbstractMetric;
+import evaluation.metrics.Event;
+import evaluation.metrics.GameMetrics;
+import evaluation.metrics.IMetricsCollection;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import utilities.Utils;
+import utilities.JSONUtils;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
 
 public interface IGameListener {
 
@@ -28,7 +31,7 @@ public interface IGameListener {
      * <p>
      * This is useful for Listeners that are just interested in aggregate data across many runs
      */
-    void allGamesFinished();
+    void report();
 
     default boolean setOutputDirectory(String... nestedDirectories) {
         return true;
@@ -55,11 +58,11 @@ public interface IGameListener {
         File listenerDetails = new File(listenerClass);
         if (listenerDetails.exists()) {
             // in this case we construct from file
-            listener = Utils.loadClassFromFile(listenerClass);
+            listener = JSONUtils.loadClassFromFile(listenerClass);
         } else {
             // In this case we first check if we have a Metrics class
             // And if we do, we extract all the metrics from the class
-            if (metricsClass != null && !metricsClass.equals("")) {
+            if (metricsClass != null && !metricsClass.isEmpty()) {
                 try {
                     Class<?> clazz = Class.forName(metricsClass);
                     Constructor<?> constructor;
@@ -95,9 +98,6 @@ public interface IGameListener {
                         }
                     }
                 }
-                // If no metrics (or a problem occurred), then we use the no-arg constructor
-                if (listener == null)
-                    return createListener(listenerClass);
             } catch (Exception e) {
                 System.out.println("Error occurred trying to instantiate listener " + listenerClass + ": " + e.getMessage() + " : " + e.toString());
             }
@@ -116,21 +116,12 @@ public interface IGameListener {
      * @return empty game listener given class, no logger, no metrics
      */
     static IGameListener createListener(String listenerClass) {
-        IGameListener listener = null;
-        try {
-            Class<?> clazz = Class.forName(listenerClass);
-            Constructor<?> constructor;
-            constructor = clazz.getConstructor();
-            listener = (IGameListener) constructor.newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return listener;
+        return createListener(listenerClass, "");
     }
 
     default void reset() {
     }
 
-    default void init(Game game) {
-    }
+    default void init(Game game, int nPlayersPerGame, Set<String> playerNames) {}
+
 }
