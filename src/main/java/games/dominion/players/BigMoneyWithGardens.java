@@ -3,6 +3,7 @@ package games.dominion.players;
 import core.AbstractGameState;
 import core.AbstractPlayer;
 import core.actions.AbstractAction;
+import games.dominion.DominionConstants.DeckType;
 import games.dominion.DominionGameState;
 import games.dominion.actions.BuyCard;
 import games.dominion.actions.EndPhase;
@@ -24,6 +25,12 @@ public class BigMoneyWithGardens extends AbstractPlayer {
         DominionGameState state = (DominionGameState) gameState;
         int player = gameState.getCurrentPlayer();
         //List<AbstractAction> actions = getForwardModel().computeAvailableActions(gameState, getParameters().actionSpace);
+        int noOfProvinceInSupply = state.cardsOfType(CardType.PROVINCE, -1, DeckType.SUPPLY);
+        int noOfGardensInSupply = state.cardsOfType(CardType.GARDENS, -1, DeckType.SUPPLY);
+        int noOfDuchyInSupply = state.cardsOfType(CardType.DUCHY, -1, DeckType.SUPPLY);
+        int noOfEstateInSupply = state.cardsOfType(CardType.ESTATE, -1, DeckType.SUPPLY);
+        int noOfGoldInSupply = state.cardsOfType(CardType.GOLD, -1, DeckType.SUPPLY);
+        int noOfSilverInSupply = state.cardsOfType(CardType.SILVER, -1, DeckType.SUPPLY);
 
         //check that agent is in the buy phase
         if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
@@ -34,21 +41,21 @@ public class BigMoneyWithGardens extends AbstractPlayer {
         }else{
             int cash = state.availableSpend(player);
             if(gameState.getRoundCounter() > 15){
-                if(cash >= 8){
+                if(cash >= 8 && (noOfProvinceInSupply > 0)){
                     return new BuyCard(CardType.PROVINCE, player);
-                } else if(cash >= 4) {
+                } else if(cash >= 4 && (noOfGardensInSupply > 0)) {
                     return new BuyCard(CardType.GARDENS, player);
-                } else if (cash >= 5 ) {
+                } else if (cash >= 5 && (noOfDuchyInSupply > 0)) {
                     return new BuyCard(CardType.DUCHY, player);
-                } else if (cash >= 2 ) {
+                } else if (cash >= 2 && (noOfEstateInSupply > 0)) {
                     return new BuyCard(CardType.ESTATE, player);
                 }else{
                     return new EndPhase();
                 }
             }else{
-                if (cash >= 6 ) {
+                if (cash >= 6 && (noOfGoldInSupply > 0)) {
                     return new BuyCard(CardType.GOLD, player);
-                }else if (cash >= 3 ) {
+                }else if (cash >= 3 && (noOfSilverInSupply > 0)) {
                     return new BuyCard(CardType.SILVER, player);
                 }else{
                     return new EndPhase();

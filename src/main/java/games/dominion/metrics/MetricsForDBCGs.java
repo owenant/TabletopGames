@@ -61,14 +61,16 @@ public class MetricsForDBCGs {
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
       //MCTSPlayer mctsplayer = (MCTSPlayer) PlayerFactory.createPlayer(fileMCTSJson);
+      //agents.add(new DoubleWitch());
+      //agents.add(mctsplayer);
+      //agents.add(new RandomPlayer());
       agents.add(new BigMoneyWithGardens());
       agents.add(new DoubleWitch());
-      //agents.add(mctsplayer);
 
       //set-up game type and other tournament parameters
       GameType gameToPlay = Dominion;
       int playersPerGame = 2;
-      int gamesPerMatchup = 10;
+      int gamesPerMatchup = 25;
       TournamentMode mode = TournamentMode.NO_SELF_PLAY;
       long seed = System.currentTimeMillis();
       //DominionFGParameters params = new DominionFGParameters(seed);
@@ -89,7 +91,7 @@ public class MetricsForDBCGs {
       tournament.setListeners(dominionlisteners);
 
       //run tournament
-      tournament.verbose = false;
+      tournament.verbose = true;
       tournament.resultsFile = filename;
       tournament.run();
   }

@@ -30,10 +30,17 @@ public class DoubleWitch extends AbstractPlayer {
         int player = gameState.getCurrentPlayer();
         //List<AbstractAction> actions = getForwardModel().computeAvailableActions(gameState, getParameters().actionSpace);
 
-        //get decks for player
+        //check cards in player's deck
         int totalDeckGoldCards = state.cardsOfType(CardType.GOLD, player, DeckType.ALL);
         int totalDeckWitchCards = state.cardsOfType(CardType.WITCH, player, DeckType.ALL);
+
+        //check cards in supply
         int noOfProvinceInSupply = state.cardsOfType(CardType.PROVINCE, -1, DeckType.SUPPLY);
+        int noOfWitchInSupply = state.cardsOfType(CardType.WITCH, -1, DeckType.SUPPLY);
+        int noOfDuchyInSupply = state.cardsOfType(CardType.DUCHY, -1, DeckType.SUPPLY);
+        int noOfEstateInSupply = state.cardsOfType(CardType.ESTATE, -1, DeckType.SUPPLY);
+        int noOfGoldInSupply = state.cardsOfType(CardType.GOLD, -1, DeckType.SUPPLY);
+        int noOfSilverInSupply = state.cardsOfType(CardType.SILVER, -1, DeckType.SUPPLY);
 
         //check that agent is in the buy phase
         if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
@@ -48,17 +55,17 @@ public class DoubleWitch extends AbstractPlayer {
             }
         }else{
             int cash = state.availableSpend(player);
-            if(cash >= 8 && totalDeckGoldCards > 0 ){
+            if(cash >= 8 && (noOfProvinceInSupply > 0) && (totalDeckGoldCards > 0)){
                 return new BuyCard(CardType.PROVINCE, player);
-            } else if(cash >= 5 && totalDeckWitchCards < 1) {
+            } else if(cash >= 5 && (noOfWitchInSupply > 0) && (totalDeckWitchCards < 2)) {
                 return new BuyCard(CardType.WITCH, player);
-            } else if (cash >= 5 && noOfProvinceInSupply < 4) {
+            } else if (cash >= 5 && (noOfDuchyInSupply > 0) && (noOfProvinceInSupply < 4)) {
                 return new BuyCard(CardType.DUCHY, player);
-            } else if (cash >= 2 && noOfProvinceInSupply < 2) {
+            } else if (cash >= 2 && (noOfEstateInSupply > 0) && (noOfProvinceInSupply < 2)) {
                 return new BuyCard(CardType.ESTATE, player);
-            } else if (cash >= 6 ) {
+            } else if (cash >= 6 && (noOfGoldInSupply > 0)) {
                 return new BuyCard(CardType.GOLD, player);
-            } else if (cash >= 3 && noOfProvinceInSupply < 2) {
+            } else if (cash >= 3 && (noOfSilverInSupply > 0)) {
                 return new BuyCard(CardType.SILVER, player);
             } else{
                 return new EndPhase();
