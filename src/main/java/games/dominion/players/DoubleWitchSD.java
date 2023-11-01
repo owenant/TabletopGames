@@ -3,20 +3,21 @@ package games.dominion.players;
 import core.AbstractGameState;
 import core.AbstractPlayer;
 import core.actions.AbstractAction;
-import games.dominion.DominionConstants;
 import games.dominion.DominionConstants.DeckType;
 import games.dominion.DominionGameState;
 import games.dominion.actions.BuyCard;
 import games.dominion.actions.EndPhase;
+import games.dominion.actions.TrashCard;
 import games.dominion.actions.Witch;
+import games.dominion.actions.MoveCard;
 import games.dominion.cards.CardType;
-import games.dominion.cards.DominionCard;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import core.components.Deck;
 
-public class DoubleWitch extends AbstractPlayer {
+//Warning: this DoubleWitch player is designed for use with Size Distortion Kingdom cards and shouldnt
+//be used with other Kingdom card selections
+public class DoubleWitchSD extends AbstractPlayer {
 
     /**
      * Generate a valid action to play in the game. Valid actions can be found by accessing
@@ -28,7 +29,6 @@ public class DoubleWitch extends AbstractPlayer {
     public AbstractAction _getAction(AbstractGameState gameState, List<AbstractAction> possibleActions) {
         DominionGameState state = (DominionGameState) gameState;
         int player = gameState.getCurrentPlayer();
-        //List<AbstractAction> actions = getForwardModel().computeAvailableActions(gameState, getParameters().actionSpace);
 
         //check cards in player's deck
         int totalDeckGoldCards = state.cardsOfType(CardType.GOLD, player, DeckType.ALL);
@@ -45,13 +45,43 @@ public class DoubleWitch extends AbstractPlayer {
         //check that agent is in the buy phase
         if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
         {
-            //play a witch card if possible
-            int witchCardsInHand = state.cardsOfType(CardType.WITCH, player, DeckType.HAND);
-            if (witchCardsInHand > 0) {
-                return new Witch(player);
-            }else {
-                //TODO: check to see if all actions are discard and then throw away cheapest card
-                return possibleActions.get(0);
+            //possible actions in action phase for Double Witch in SD kingdom set, are play witch, do nothing,
+            //or react to bureaucrat or bandit.
+            for (AbstractAction action : possibleActions) {
+                if (action instanceof MoveCard) {
+                    //First we check to see if we need to deal with opponent playing Bureaucrat
+                    //This is signaled in the case of the SD card set by having to move a victory
+                    //card ot the draw pile
+                    //note there maybe other possible actions corresponding to moving either a province,
+                    //duchy or estate back ontop of the player's draw pile
+                    //for a DW strategy it makes no difference which of these we choose, so for simplicity
+                    //we just perform this first found move card action
+                    return action;
+                }else if (action instanceof TrashCard) {
+                    //Next we check to see if we need to deal with opponent playing a Bandit card
+                    //see if our top two cards are silver or gold and if so trash the cheapest
+                    //then discard the rest of the card
+
+                    //if action is to trash silver then go ahead as this is the least expensive option,
+                    // if it is to trash gold first check to see if we can trash a silver first
+                    TrashCard trashAction = (TrashCard) action;
+                    if (trashAction.getTrashedCard() == CardType.SILVER) {
+                        return action;
+                    }else if (trashAction.getTrashedCard() == CardType.GOLD) {
+                        //check for possibility to trash a silver first
+                        for (AbstractAction actionCheckForSilver : possibleActions){
+                            TrashCard trashActionCheckForSilver = (TrashCard) actionCheckForSilver;
+                            if (trashActionCheckForSilver.getTrashedCard() == CardType.SILVER) {
+                                return trashActionCheckForSilver;
+                            }
+                        }
+                        //if no silver found, go ahead and trash gold
+                        return action;
+                    }
+                } else if (action instanceof Witch) {
+                    //in this case we can play a witch card
+                    return action;
+                }
             }
         }else{
             int cash = state.availableSpend(player);
@@ -67,10 +97,10 @@ public class DoubleWitch extends AbstractPlayer {
                 return new BuyCard(CardType.GOLD, player);
             } else if (cash >= 3 && (noOfSilverInSupply > 0)) {
                 return new BuyCard(CardType.SILVER, player);
-            } else{
-                return new EndPhase();
             }
         }
+        //if we get here we just need to do nothing
+        return new EndPhase();
     }
 
     @Override
@@ -79,7 +109,7 @@ public class DoubleWitch extends AbstractPlayer {
     }
 
     @Override
-    public DoubleWitch copy() {
+    public DoubleWitchSD copy() {
         return this;
     }
 

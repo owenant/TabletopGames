@@ -81,4 +81,9 @@ public class TrashCard extends AbstractAction {
     public String toString() {
         return String.format("Player %d trashes a %s from %s", player, trashedCard, fromDeck);
     }
+
+    //added by AO - required for Finite State Machine AI agents
+    public CardType getTrashedCard() {
+        return trashedCard;
+    }
 }
