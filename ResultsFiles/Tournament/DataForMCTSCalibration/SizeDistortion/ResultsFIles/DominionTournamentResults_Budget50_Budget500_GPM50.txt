@@ -1,0 +1,11 @@
+Game: Dominion, Players: 2, GamesPerMatchup: 50, Mode: NO_SELF_PLAY
+MCTS_BudgetA got 9.00 points. MCTS_BudgetA won 7.0% of the 100 games of the tournament. MCTS_BudgetA won 7.0% of the 100 games it played during the tournament.
+MCTS_BudgetA won 7.0% of the 100 games against MCTS_BudgetB.
+
+MCTS_BudgetB got 91.00 points. MCTS_BudgetB won 89.0% of the 100 games of the tournament. MCTS_BudgetB won 89.0% of the 100 games it played during the tournament.
+MCTS_BudgetB won 89.0% of the 100 games against MCTS_BudgetA.
+
+---- Ranking ---- 
+MCTS_BudgetB: Win rate 0.91 +/- 0.01	Mean Ordinal 1.07 +/- 0.01
+MCTS_BudgetA: Win rate 0.09 +/- 0.01	Mean Ordinal 1.89 +/- 0.01
+

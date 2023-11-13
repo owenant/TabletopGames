@@ -1,0 +1,11 @@
+Game: Dominion, Players: 2, GamesPerMatchup: 50, Mode: NO_SELF_PLAY
+MCTS_BudgetA got 100.00 points. MCTS_BudgetA won 100.0% of the 100 games of the tournament. MCTS_BudgetA won 100.0% of the 100 games it played during the tournament.
+MCTS_BudgetA won 100.0% of the 100 games against Random.
+
+Random got 0.00 points. Random won 0.0% of the 100 games of the tournament. Random won 0.0% of the 100 games it played during the tournament.
+Random won 0.0% of the 100 games against MCTS_BudgetA.
+
+---- Ranking ---- 
+MCTS_BudgetA: Win rate 1.00 +/- 0.00	Mean Ordinal 1.00 +/- 0.00
+Random: Win rate 0.00 +/- 0.00	Mean Ordinal 2.00 +/- 0.00
+
