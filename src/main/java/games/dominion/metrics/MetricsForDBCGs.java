@@ -42,18 +42,15 @@ public class MetricsForDBCGs {
   }
 
   public static void simpleTournament() {
-      String mctsJsonDir = "/Users/anthonyowen/GitProjects/TabletopGames/ResultsFiles/Tournament/JSON for Dominion MCTS";
-      int budgetLow = 10;
-      int budgetHigh = 10;
-      String mctsBudgetLow = mctsJsonDir + "/DomSD_Budget_" + Integer.toString(budgetLow) + ".json";
-      String mctsBudgetHigh = mctsJsonDir + "/DomSD_Budget_" + Integer.toString(budgetHigh) + ".json";
-      //String destdir= "/Users/anthonyowen/GitProjects/PlayTraces/Data";
+      int gamesPerMatchup = 50;
       String destdir = "/Users/anthonyowen/GitProjects/TableTopGames/ResultsFiles/Tournament";
-      String featureslogfile = destdir + "/featureslogfile.txt";
-      //String filename = destdir + "/DominionTournamentResults_Budget_" + Integer.toString(budgetLow)
-      //    + "_" + Integer.toString(budgetHigh) + ".txt";
-      String filename = destdir + "/DominionTournamentResults_Budget_" + Integer.toString(budgetHigh)
-          + "_DW.txt";
+      String mctsJsonDir = "/JSON for Dominion MCTS";
+
+      String mctsBudgetLow = destdir + mctsJsonDir + "/DomMCTSLowSkill_Budget_50.json";
+      String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500.json";
+      String mctsBudgetHigh = destdir + mctsJsonDir + "/DomMCTSHighSkill_Budget_5000.json";
+      String featureslogfile = destdir + "/featureslogfile_Run2.txt";
+      String tournamentResultsfilename = destdir + "/DominionTournamentResults.txt";
 
       //toggle listeners on/off
       boolean useListeners = false;
@@ -61,23 +58,25 @@ public class MetricsForDBCGs {
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
       MCTSPlayer mctsplayerLow = (MCTSPlayer) PlayerFactory.createPlayer(mctsBudgetLow);
-      mctsplayerLow.setName("MCTS_LowBudget");
+      mctsplayerLow.setName("MCTS_BudgetLowSkill");
+      MCTSPlayer mctsplayerMedium = (MCTSPlayer) PlayerFactory.createPlayer(mctsBudgetMedium);
+      mctsplayerMedium.setName("MCTS_BudgetMediumSkill");
       MCTSPlayer mctsplayerHigh = (MCTSPlayer) PlayerFactory.createPlayer(mctsBudgetHigh);
-      mctsplayerHigh.setName("MCTS_HighBudget");
+      mctsplayerHigh.setName("MCTS_BudgetHighSkill");
+
       //agents.add(new DoubleWitch());
-      //agents.add(mctsplayerLow);
+      agents.add(mctsplayerLow);
+      //agents.add(mctsplayerMedium);
       agents.add(mctsplayerHigh);
       //agents.add(new RandomPlayer());
-      agents.add(new BigMoneyWithGardensSD());
+      //agents.add(new BigMoneyWithGardensSD());
       //agents.add(new DoubleWitchSD());
 
       //set-up game type and other tournament parameters
       GameType gameToPlay = Dominion;
       int playersPerGame = 2;
-      int gamesPerMatchup = 50;
       TournamentMode mode = TournamentMode.NO_SELF_PLAY;
       long startTime = System.currentTimeMillis();
-      //long seed = 100;
       DominionSDParameters params = new DominionSDParameters(startTime);
 
       //set-up tournament
@@ -100,7 +99,7 @@ public class MetricsForDBCGs {
 
       //run tournament
       tournament.verbose = true;
-      tournament.resultsFile = filename;
+      tournament.resultsFile = tournamentResultsfilename;
       tournament.run();
 
       long elapsedTime = System.currentTimeMillis() - startTime;
