@@ -44,6 +44,7 @@ public class DominionCard extends Card {
             case THRONE_ROOM:
             case BANDIT:
             case BUREAUCRAT:
+            case WOODCUTTER:
             case SENTRY:
                 return new DominionCard(type);
             case GARDENS:
@@ -76,6 +77,7 @@ public class DominionCard extends Card {
             case LABORATORY:
             case FESTIVAL:
             case MARKET:
+            case WOODCUTTER:
             case MOAT:
                 return new SimpleAction(type, playerId, dummy);
             case CELLAR:

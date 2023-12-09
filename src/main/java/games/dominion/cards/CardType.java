@@ -34,7 +34,8 @@ public enum CardType {
     MINE(5, 0, 0),
     SENTRY(5, 0, 0, 1, 1, 0, 0),
     WITCH(5, 0, 0, false, false, true, false, true, 0, 2, 0, 0),
-    ARTISAN(6, 0, 0);
+    ARTISAN(6, 0, 0),
+    WOODCUTTER(3, 0, 0, 0, 0, 1, 2);
 
     public final int cost;
     public final int treasure;
