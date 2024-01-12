@@ -10,6 +10,7 @@ import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
 import games.dominion.DominionFGParameters;
+import games.dominion.DominionFG1EParameters;
 import games.dominion.DominionSDParameters;
 import core.interfaces.IStatisticLogger;
 import evaluation.listeners.StateFeatureListener;
@@ -42,18 +43,18 @@ public class MetricsForDBCGs {
   }
 
   public static void simpleTournament() {
-      int gamesPerMatchup = 50;
+      int gamesPerMatchup = 500;
       String destdir = "/Users/anthonyowen/GitProjects/TableTopGames/ResultsFiles/Tournament";
       String mctsJsonDir = "/JSON for Dominion MCTS";
 
       String mctsBudgetLow = destdir + mctsJsonDir + "/DomMCTSLowSkill_Budget_50.json";
       String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500.json";
       String mctsBudgetHigh = destdir + mctsJsonDir + "/DomMCTSHighSkill_Budget_5000.json";
-      String featureslogfile = destdir + "/featureslogfile_Run2.txt";
+      String featureslogfile = destdir + "/featureslogfile.txt";
       String tournamentResultsfilename = destdir + "/DominionTournamentResults.txt";
 
       //toggle listeners on/off
-      boolean useListeners = false;
+      boolean useListeners = true;
 
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
@@ -64,10 +65,18 @@ public class MetricsForDBCGs {
       MCTSPlayer mctsplayerHigh = (MCTSPlayer) PlayerFactory.createPlayer(mctsBudgetHigh);
       mctsplayerHigh.setName("MCTS_BudgetHighSkill");
 
+      //and similar opponent agents if needed
+      MCTSPlayer mctsplayerMediumOpp = (MCTSPlayer) PlayerFactory.createPlayer(mctsBudgetMedium);
+      mctsplayerMediumOpp.setName("MCTS_BudgetMediumSkillOpp");
+      MCTSPlayer mctsplayerHighOpp = (MCTSPlayer) PlayerFactory.createPlayer(mctsBudgetHigh);
+      mctsplayerHighOpp.setName("MCTS_BudgetHighSkillOpp");
+
       //agents.add(new DoubleWitch());
-      agents.add(mctsplayerLow);
-      //agents.add(mctsplayerMedium);
-      agents.add(mctsplayerHigh);
+      //agents.add(mctsplayerLow);
+      agents.add(mctsplayerMedium);
+      agents.add(mctsplayerMediumOpp);
+      //agents.add(mctsplayerHigh);
+      //agents.add(mctsplayerHighOpp);
       //agents.add(new RandomPlayer());
       //agents.add(new BigMoneyWithGardensSD());
       //agents.add(new DoubleWitchSD());
@@ -78,6 +87,7 @@ public class MetricsForDBCGs {
       TournamentMode mode = TournamentMode.NO_SELF_PLAY;
       long startTime = System.currentTimeMillis();
       DominionSDParameters params = new DominionSDParameters(startTime);
+      //DominionFG1EParameters params = new DominionFG1EParameters(startTime);
 
       //set-up tournament
       RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
@@ -133,7 +143,7 @@ public class MetricsForDBCGs {
     int playersPerGame = 2;
     int gamesPerMatchup = 1;
     TournamentMode mode = TournamentMode.NO_SELF_PLAY;
-    DominionFGParameters params = new DominionFGParameters(startTime);
+    DominionFG1EParameters params = new DominionFG1EParameters(startTime);
 
     //set-up tournament
     RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
