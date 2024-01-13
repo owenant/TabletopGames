@@ -162,10 +162,11 @@ public class DominionDeckGenome implements Comparable<DominionDeckGenome>{
       MCTSParams paramsMCTS = new MCTSParams();
       paramsMCTS.rolloutLength = 10;
       paramsMCTS.maxTreeDepth = 10;
-      paramsMCTS.epsilon = 1e-6;
+      //paramsMCTS.epsilon = 1e-6;
       AbstractPlayer focusAIAgent = new MCTSPlayer(paramsMCTS);
       List<AbstractPlayer> players = Arrays.asList(focusAIAgent, new RandomPlayer());
-      DominionFGParameters params = new DominionFGParameters(new Random(System.currentTimeMillis()).nextInt());
+      DominionFGParameters params = new DominionFGParameters();
+      //DominionFGParameters params = new DominionFGParameters(new Random(System.currentTimeMillis()).nextInt());
       DominionGameState state = new DominionGameState(params, players.size());
       DominionForwardModel fm = new DominionForwardModel();
       //note creating a game initialises the state

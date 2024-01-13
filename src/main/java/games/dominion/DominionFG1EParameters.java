@@ -6,8 +6,8 @@ import games.GameType;
 import games.dominion.cards.CardType;
 
 public class DominionFG1EParameters extends DominionParameters {
-    public DominionFG1EParameters(long seed) {
-        super(seed);
+    public DominionFG1EParameters() {
+        //super(seed);
         cardsUsed.add(CardType.CELLAR);
         cardsUsed.add(CardType.MARKET);
         cardsUsed.add(CardType.WOODCUTTER);

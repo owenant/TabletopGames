@@ -1,7 +1,10 @@
 package games.dominion.metrics;
 
 import static games.GameType.Dominion;
+
+import core.AbstractParameters;
 import core.AbstractPlayer;
+import evaluation.RunArg;
 import evaluation.listeners.IGameListener;
 import evaluation.metrics.Event.GameEvent;
 import evaluation.metrics.GameMetrics;
@@ -19,8 +22,10 @@ import games.dominion.players.DoubleWitchSD;
 import games.dominion.players.BigMoneyWithGardensSD;
 import games.dominion.stats.DomPlayTrace;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.lang.Math;
 import java.io.File;
@@ -43,7 +48,7 @@ public class MetricsForDBCGs {
   }
 
   public static void simpleTournament() {
-      int gamesPerMatchup = 500;
+      int gamesPerMatchup = 5;
       String destdir = "/Users/anthonyowen/GitProjects/TableTopGames/ResultsFiles/Tournament";
       String mctsJsonDir = "/JSON for Dominion MCTS";
 
@@ -86,12 +91,16 @@ public class MetricsForDBCGs {
       int playersPerGame = 2;
       TournamentMode mode = TournamentMode.NO_SELF_PLAY;
       long startTime = System.currentTimeMillis();
-      DominionSDParameters params = new DominionSDParameters(startTime);
+      DominionSDParameters params = new DominionSDParameters();
       //DominionFG1EParameters params = new DominionFG1EParameters(startTime);
 
       //set-up tournament
+      //RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
+          //gamesPerMatchup, mode, params, false);
+      Map<RunArg, Object> config = new HashMap<>();
+      config.put(RunArg.matchups, gamesPerMatchup);
       RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
-          gamesPerMatchup, mode, params, false);
+          params, mode, config);
 
       //set-up listeners
       if (useListeners) {
@@ -143,11 +152,14 @@ public class MetricsForDBCGs {
     int playersPerGame = 2;
     int gamesPerMatchup = 1;
     TournamentMode mode = TournamentMode.NO_SELF_PLAY;
-    DominionFG1EParameters params = new DominionFG1EParameters(startTime);
+    //DominionFG1EParameters params = new DominionFG1EParameters(startTime);
+      DominionFG1EParameters params = new DominionFG1EParameters();
 
     //set-up tournament
+    Map<RunArg, Object> config = new HashMap<>();
+    config.put(RunArg.matchups, gamesPerMatchup);
     RoundRobinTournament tournament = new RoundRobinTournament(agents, gameToPlay, playersPerGame,
-        gamesPerMatchup, mode, params, false);
+        params, mode, config);
 
     // Add listeners
     //String listenerClass = "evaluation.listeners.MetricsGameListener";
