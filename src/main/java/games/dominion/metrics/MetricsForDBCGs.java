@@ -52,7 +52,7 @@ public class MetricsForDBCGs {
   }
 
   public static void simpleTournament() {
-      int gamesPerMatchup = 5;
+      int gamesPerMatchup = 10;
       String destdir = "/Users/anthonyowen/GitProjects/TableTopGames/ResultsFiles/Tournament";
       String mctsJsonDir = "/JSON for Dominion MCTS";
 
@@ -81,13 +81,24 @@ public class MetricsForDBCGs {
       mctsplayerHighOpp.setName("MCTS_BudgetHighSkillOpp");
 
       //set-up centroid player
-      String centroid_csv = destdir + "/CentroidPlayerData/MCTS_Centroid.json";
+      //String centroid_csv = destdir + "/CentroidPlayerData/MCTS_Centroid.json";
+      //String centroid_csv = destdir + "/CentroidPlayerData/HumanCentroid.json";
+      String centroid_csv = destdir + "/CentroidPlayerData/DW_Centroid.json";
       CentroidPlayer centroidAgent = new CentroidPlayer(centroid_csv);
       centroidAgent.setName("CentroidAgent");
+
+      //set up random player
+      RandomPlayer rndPlayer = new RandomPlayer();
+      rndPlayer.setName("RandomPlayer");
+
+      //set up big money with gardens
+      BigMoneyWithGardensSD bmwgPlayer = new BigMoneyWithGardensSD();
+      bmwgPlayer.setName("BigMoneyWithGardens");
 
       //agents.add(new DoubleWitch());
       //agents.add(mctsplayerLow);
       agents.add(mctsplayerLow);
+      //agents.add(bmwgPlayer);
       agents.add(centroidAgent);
       //agents.add(mctsplayerMediumOpp);
       //agents.add(mctsplayerHigh);
