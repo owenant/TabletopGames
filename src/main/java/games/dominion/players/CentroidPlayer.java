@@ -11,6 +11,8 @@ import games.dominion.cards.CardType;
 import core.AbstractGameState;
 import core.AbstractPlayer;
 import core.actions.AbstractAction;
+import games.dominion.cards.DominionCard;
+import core.components.Deck;
 import utilities.Pair;
 import utilities.JSONUtils;
 import org.json.simple.JSONObject;
@@ -188,19 +190,20 @@ public class CentroidPlayer extends AbstractPlayer {
         for (AbstractAction action : possibleActions) {
             double distance = 0;
             DominionGameState state = (DominionGameState) gameState;
-            DominionGameState clone = (DominionGameState) state.clone();
+            DominionGameState clone = (DominionGameState) state.copy();
             action.execute(clone);
-            //get the new card amounts for the sum of hand, draw and discard
-            Map<CardType, Double> newCardAmountsDiscard = clone.getDeck(DeckType.DISCARD).getCardTypeCount();
-            Map<CardType, Double> newCardAmountsDraw = clone.getDeck(DeckType.DRAW).getCardTypeCount();
-            Map<CardType, Double> newCardAmountsHand = clone.getDeck(DeckType.HAND).getCardTypeCount();
 
-            //get the target card amounts
-            Map<CardType, Double> targetCardAmounts = centroidPath[state.getRoundNumber()];
-            //calculate the distance
+             //calculate the distance
             for (CardType cardType : CardType.values()) {
-                distance += Math.pow(newCardAmounts.get(cardType) - targetCardAmounts.get(cardType), 2);
+                Integer currCardAmt = clone.cardsOfType(cardType, clone.getCurrentPlayer(), DeckType.ALL);
+                Double tgtCardAmt = 0;
+                if (centroidPath.get(state.getRoundCounter()).containsKey(cardType)){
+                    tgtCardAmt = centroidPath.get(state.getRoundCounter()).get(cardType);
+                }
+                distance += Math.pow(currCardAmt - tgtCardAmt, 2);
             }
+            distance = Math.sqrt(distance);
+
             //update the best action
             if (distance < minDistance) {
                 minDistance = distance;
@@ -208,7 +211,7 @@ public class CentroidPlayer extends AbstractPlayer {
             }
         }
 
-        return new EndPhase();
+        return bestAction;
     }
 
     @Override
