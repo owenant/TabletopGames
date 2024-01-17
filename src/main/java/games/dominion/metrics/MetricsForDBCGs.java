@@ -18,8 +18,10 @@ import games.dominion.DominionSDParameters;
 import core.interfaces.IStatisticLogger;
 import evaluation.listeners.StateFeatureListener;
 import evaluation.listeners.MetricsGameListener;
+import games.dominion.cards.CardType;
 import games.dominion.players.DoubleWitchSD;
 import games.dominion.players.BigMoneyWithGardensSD;
+import games.dominion.players.CentroidPlayer;
 import games.dominion.stats.DomPlayTrace;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +35,8 @@ import java.io.FileWriter;
 import players.PlayerFactory;
 import players.simple.RandomPlayer;
 import players.mcts.MCTSPlayer;
+import utilities.Pair;
+
 import java.util.Collections;
 
 //entry point for metric calculations for DBCGs. Currently focused on Dominion
@@ -76,10 +80,15 @@ public class MetricsForDBCGs {
       MCTSPlayer mctsplayerHighOpp = (MCTSPlayer) PlayerFactory.createPlayer(mctsBudgetHigh);
       mctsplayerHighOpp.setName("MCTS_BudgetHighSkillOpp");
 
+      //set-up centroid player
+      String centroid_csv = destdir + "/CSVForCentroid/MCTS_Centroids.csv;
+      CentroidPlayer centroidAgent(centroid_csv);
+
       //agents.add(new DoubleWitch());
       //agents.add(mctsplayerLow);
-      agents.add(mctsplayerMedium);
-      agents.add(mctsplayerMediumOpp);
+      agents.add(mctsplayerLow);
+      agents.add(centroidAgent);
+      //agents.add(mctsplayerMediumOpp);
       //agents.add(mctsplayerHigh);
       //agents.add(mctsplayerHighOpp);
       //agents.add(new RandomPlayer());
