@@ -83,6 +83,7 @@ public class MetricsForDBCGs {
       //set-up centroid player
       String centroid_csv = destdir + "/CentroidPlayerData/MCTS_Centroid.json";
       CentroidPlayer centroidAgent = new CentroidPlayer(centroid_csv);
+      centroidAgent.setName("CentroidAgent");
 
       //agents.add(new DoubleWitch());
       //agents.add(mctsplayerLow);

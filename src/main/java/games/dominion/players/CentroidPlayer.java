@@ -187,36 +187,74 @@ public class CentroidPlayer extends AbstractPlayer {
         //Loop over all possible actions and find the one that is closest to the centroid for the current round
         double minDistance = Double.MAX_VALUE;
         AbstractAction bestAction = null;
-        for (AbstractAction action : possibleActions) {
-            double distance = 0;
-            DominionGameState state = (DominionGameState) gameState;
-            DominionGameState clone = (DominionGameState) state.copy();
-            action.execute(clone);
+        DominionGameState state = (DominionGameState) gameState;
+        int player = gameState.getCurrentPlayer();
+        int round_count = state.getRoundCounter();
 
-             //calculate the distance
-            for (CardType cardType : CardType.values()) {
-                Integer currCardAmt = clone.cardsOfType(cardType, clone.getCurrentPlayer(), DeckType.ALL);
-                Double tgtCardAmt = 0;
-                if (centroidPath.get(state.getRoundCounter()).containsKey(cardType)){
-                    tgtCardAmt = centroidPath.get(state.getRoundCounter()).get(cardType);
+        if(round_count < centroidPath.size()) {
+            for (AbstractAction action : possibleActions) {
+                DominionGameState clone = (DominionGameState) state.copy();
+                action.execute(clone);
+
+                //calculate the distance
+                double distance = 0;
+                for (CardType cardType : CardType.values()) {
+                    Integer currCardAmt = clone.cardsOfType(cardType, player, DeckType.ALL);
+                    Double tgtCardAmt = 0.0;
+                    if (centroidPath.get(state.getRoundCounter()).containsKey(cardType)) {
+                        tgtCardAmt = centroidPath.get(state.getRoundCounter()).get(cardType);
+                    }
+                    distance += Math.pow(currCardAmt - tgtCardAmt, 2);
                 }
-                distance += Math.pow(currCardAmt - tgtCardAmt, 2);
-            }
-            distance = Math.sqrt(distance);
+                distance = Math.sqrt(distance);
 
-            //update the best action
-            if (distance < minDistance) {
-                minDistance = distance;
-                bestAction = action;
+                //update the best action
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    bestAction = action;
+                }
+            }
+            return bestAction;
+        }else{
+            if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
+            {
+                //TODO: check to see if all actions are discard and then throw away
+                //the cheapest card
+                return possibleActions.get(0);
+            }else{
+                int cash = state.availableSpend(player);
+                int provinces = state.getCardsIncludedInGame().getOrDefault(CardType.PROVINCE, 0);
+
+                switch (cash) {
+                    case 0:
+                    case 1:
+                        return new EndPhase();
+                    case 2:
+                        if (provinces < 4 && possibleActions.contains(new BuyCard(CardType.ESTATE, player)))
+                            return new BuyCard(CardType.ESTATE, player);
+                        return new EndPhase();
+                    case 3:
+                    case 4:
+                        return new BuyCard(CardType.SILVER, player);
+                    case 5:
+                        if (provinces < 6 && possibleActions.contains(new BuyCard(CardType.DUCHY, player)))
+                            return new BuyCard(CardType.DUCHY, player);
+                        else
+                            return new BuyCard(CardType.SILVER, player);
+                    case 6:
+                    case 7:
+                        return new BuyCard(CardType.GOLD, player);
+                    default:
+                        return new BuyCard(CardType.PROVINCE, player);
+
+                }
             }
         }
-
-        return bestAction;
     }
 
     @Override
     public String toString() {
-        return "BigMoneyWithGardens";
+        return "CentroidPlayer";
     }
 
     @Override
