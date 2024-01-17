@@ -81,8 +81,8 @@ public class MetricsForDBCGs {
       mctsplayerHighOpp.setName("MCTS_BudgetHighSkillOpp");
 
       //set-up centroid player
-      String centroid_csv = destdir + "/CSVForCentroid/MCTS_Centroids.csv;
-      CentroidPlayer centroidAgent(centroid_csv);
+      String centroid_csv = destdir + "/CentroidPlayerData/MCTS_Centroid.json";
+      CentroidPlayer centroidAgent = new CentroidPlayer(centroid_csv);
 
       //agents.add(new DoubleWitch());
       //agents.add(mctsplayerLow);
