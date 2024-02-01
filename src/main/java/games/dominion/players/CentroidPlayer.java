@@ -1,6 +1,7 @@
 package games.dominion.players;
 
 import games.dominion.DominionConstants.DeckType;
+import games.dominion.DominionForwardModel;
 import games.dominion.DominionGameState;
 import games.dominion.actions.BuyCard;
 import games.dominion.actions.EndPhase;
@@ -13,6 +14,8 @@ import core.AbstractPlayer;
 import core.actions.AbstractAction;
 import games.dominion.cards.DominionCard;
 import core.components.Deck;
+import players.PlayerFactory;
+import players.mcts.MCTSPlayer;
 import utilities.Pair;
 import utilities.JSONUtils;
 import org.json.simple.JSONObject;
@@ -23,17 +26,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import utilities.JSONUtils;
+import players.PlayerFactory;
+import players.mcts.MCTSPlayer;
 
 public class CentroidPlayer extends AbstractPlayer {
 
     //centroid path gives for each round the target card amounts for each card type
     public ArrayList<Map<CardType, Double>> centroidPath;
+    public MCTSPlayer mctsActionPlayer;
 
-    public CentroidPlayer(String centroidJsonFile){
+    public CentroidPlayer(String centroidJsonFile, String MCTSFileForActionPhase){
         //read data
         JSONUtils jsonSupport = new JSONUtils();
         JSONObject centroidJSON = jsonSupport.loadJSONFile(centroidJsonFile);
         String centroidString = jsonSupport.readJSONFile(centroidJsonFile, null);
+
+        //store a MCTS player to query in action phase
+        mctsActionPlayer = (MCTSPlayer) PlayerFactory.createPlayer(MCTSFileForActionPhase);
+        DominionForwardModel fwdModel = new DominionForwardModel();
+        mctsActionPlayer.setForwardModel(fwdModel);
 
         //calculate maximum number of rounds
         Integer maxRounds = 0;
@@ -188,66 +199,69 @@ public class CentroidPlayer extends AbstractPlayer {
         double minDistance = Double.MAX_VALUE;
         AbstractAction bestAction = null;
         DominionGameState state = (DominionGameState) gameState;
-        int player = gameState.getCurrentPlayer();
+        int player = state.getCurrentPlayer();
         int round_count = state.getRoundCounter();
 
-        if(round_count < centroidPath.size()) {
-            for (AbstractAction action : possibleActions) {
-                DominionGameState clone = (DominionGameState) state.copy();
-                action.execute(clone);
-
-                //calculate the distance
-                double distance = 0;
-                for (CardType cardType : CardType.values()) {
-                    Integer currCardAmt = clone.cardsOfType(cardType, player, DeckType.ALL);
-                    Double tgtCardAmt = 0.0;
-                    if (centroidPath.get(state.getRoundCounter()).containsKey(cardType)) {
-                        tgtCardAmt = centroidPath.get(state.getRoundCounter()).get(cardType);
-                    }
-                    distance += Math.pow(currCardAmt - tgtCardAmt, 2);
-                }
-                distance = Math.sqrt(distance);
-
-                //update the best action
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    bestAction = action;
-                }
-            }
-            return bestAction;
+        //use MCTS for action phase, then for buy phase use centroid if possible otherwise BMWG
+        if (state.getGamePhase() == DominionGameState.DominionGamePhase.Play){
+            return this.mctsActionPlayer._getAction(state, possibleActions);
         }else{
-            if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
-            {
-                //TODO: check to see if all actions are discard and then throw away
-                //the cheapest card
-                return possibleActions.get(0);
-            }else{
-                int cash = state.availableSpend(player);
-                int provinces = state.getCardsIncludedInGame().getOrDefault(CardType.PROVINCE, 0);
+            if(round_count < centroidPath.size()) {
+                for (AbstractAction action : possibleActions) {
+                    DominionGameState clone = (DominionGameState) state.copy();
+                    action.execute(clone);
 
-                switch (cash) {
-                    case 0:
-                    case 1:
-                        return new EndPhase();
-                    case 2:
-                        if (provinces < 4 && possibleActions.contains(new BuyCard(CardType.ESTATE, player)))
-                            return new BuyCard(CardType.ESTATE, player);
-                        return new EndPhase();
-                    case 3:
-                    case 4:
-                        return new BuyCard(CardType.SILVER, player);
-                    case 5:
-                        if (provinces < 6 && possibleActions.contains(new BuyCard(CardType.DUCHY, player)))
-                            return new BuyCard(CardType.DUCHY, player);
-                        else
-                            return new BuyCard(CardType.SILVER, player);
-                    case 6:
-                    case 7:
-                        return new BuyCard(CardType.GOLD, player);
-                    default:
-                        return new BuyCard(CardType.PROVINCE, player);
+                    //calculate the distance
+                    double distance = 0;
+                    for (CardType cardType : CardType.values()) {
+                        Integer currCardAmt = clone.cardsOfType(cardType, player, DeckType.ALL);
+                        Double tgtCardAmt = 0.0;
+                        if (centroidPath.get(state.getRoundCounter()).containsKey(cardType)) {
+                            tgtCardAmt = centroidPath.get(state.getRoundCounter()).get(cardType);
+                        }
+                        distance += Math.pow(currCardAmt - tgtCardAmt, 2);
+                    }
+                    distance = Math.sqrt(distance);
 
+                    //update the best action
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        bestAction = action;
+                    }
                 }
+                return bestAction;
+            } else {
+                //if centroid path isn't long enough use BMWG
+                int noOfProvinceInSupply = state.cardsOfType(CardType.PROVINCE, -1, DeckType.SUPPLY);
+                int noOfGardensInSupply = state.cardsOfType(CardType.GARDENS, -1, DeckType.SUPPLY);
+                int noOfDuchyInSupply = state.cardsOfType(CardType.DUCHY, -1, DeckType.SUPPLY);
+                int noOfEstateInSupply = state.cardsOfType(CardType.ESTATE, -1, DeckType.SUPPLY);
+                int noOfGoldInSupply = state.cardsOfType(CardType.GOLD, -1, DeckType.SUPPLY);
+                int noOfSilverInSupply = state.cardsOfType(CardType.SILVER, -1, DeckType.SUPPLY);
+
+                int cash = state.availableSpend(player);
+                if (gameState.getRoundCounter() > 15) {
+                    if (cash >= 8 && (noOfProvinceInSupply > 0)) {
+                        return new BuyCard(CardType.PROVINCE, player);
+                    } else if (cash >= 4 && (noOfGardensInSupply > 0)) {
+                        return new BuyCard(CardType.GARDENS, player);
+                    } else if (cash >= 5 && (noOfDuchyInSupply > 0)) {
+                        return new BuyCard(CardType.DUCHY, player);
+                    } else if (cash >= 2 && (noOfEstateInSupply > 0)) {
+                        return new BuyCard(CardType.ESTATE, player);
+                    } else {
+                        return new EndPhase();
+                    }
+                } else {
+                    if (cash >= 6 && (noOfGoldInSupply > 0)) {
+                        return new BuyCard(CardType.GOLD, player);
+                    } else if (cash >= 3 && (noOfSilverInSupply > 0)) {
+                        return new BuyCard(CardType.SILVER, player);
+                    }
+                }
+
+                //if we get here we just need to do nothing
+                return new EndPhase();
             }
         }
     }
