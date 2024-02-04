@@ -9,6 +9,7 @@ import evaluation.listeners.IGameListener;
 import evaluation.metrics.Event.GameEvent;
 import evaluation.metrics.GameMetrics;
 import evaluation.metrics.IDataLogger;
+import evaluation.metrics.IDataLogger.ReportType;
 import evaluation.tournaments.RoundRobinTournament;
 import evaluation.tournaments.AbstractTournament.TournamentMode;
 import games.GameType;
@@ -25,6 +26,7 @@ import games.dominion.players.CentroidPlayer;
 import games.dominion.stats.DomPlayTrace;
 import games.dominion.stats.DomStateFeatures;
 import games.dominion.stats.DomStateFeaturesReduced;
+import games.dominion.stats.DomActionFeatures;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -63,16 +65,18 @@ public class MetricsForDBCGs {
       String destdirGenericMetrics = destdir + "/Listeners/GenericMetrics";
       String destdirDominionMetrics = destdir + "/Listeners/DominionMetrics";
       String destdirDominionFeatures = destdir + "/Listeners/DominionFeatures";
+      String destdirDomActions = destdir + "/Listeners/DominionActions";
       String domPlayTraceLogfile = destdirDominionFeatures + "/trace_logfile.txt";
       String domStateFeaturesLogfile = destdirDominionFeatures + "/features_logfile.txt";
       String domStateFeaturesReducedLogfile = destdirDominionFeatures + "/featuresreduced_logfile.txt";
 
       //toggle listeners on/off
-      boolean useGenericListeners = true;
-      boolean useDominionMetrics = true;
+      boolean useGenericListeners = false;
+      boolean useDominionMetrics = false;
       boolean useDomPlayTrace = true;
-      boolean useDomStateFeatures = true;
-      boolean useDomStateFeaturesReduced = true;
+      boolean useDomStateFeatures = false;
+      boolean useDomStateFeaturesReduced = false;
+      boolean useActionListener = true;
 
       //first set-up AI agents
       LinkedList<AbstractPlayer> agents = new LinkedList<>();
@@ -193,6 +197,15 @@ public class MetricsForDBCGs {
 
           //add to list of listeners
           dominionlisteners.add(gameTrackerDomFeaturesReduced);
+      }
+
+      if (useActionListener){
+          DomActionFeatures domActions = new DomActionFeatures();
+          IDataLogger.ReportType[] dataTypes = new IDataLogger.ReportType[1];
+          dataTypes[0] = IDataLogger.ReportType.RawData;
+          MetricsGameListener gameTrackerDomActions = new MetricsGameListener(IDataLogger.ReportDestination.ToFile, dataTypes, domActions.getAllMetrics());
+          gameTrackerDomActions.setOutputDirectory(destdirDomActions);
+          dominionlisteners.add(gameTrackerDomActions);
       }
 
       //run tournament
