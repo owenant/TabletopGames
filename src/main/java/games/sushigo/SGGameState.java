@@ -20,7 +20,7 @@ public class SGGameState extends AbstractGameState {
     int nCardsInHand = 0;
 
     List<List<ChooseCard>> cardChoices;  // one list per player, per turn, indicates the actions chosen by the player, saved for simultaneous execution
-    HashMap<SGCard.SGCardType, Counter>[] playedCardTypes;
+    Map<SGCard.SGCardType, Counter>[] playedCardTypes;
     List<Deck<SGCard>> playedCards;
     Counter[] playerScore;
 
@@ -113,7 +113,7 @@ public class SGGameState extends AbstractGameState {
                     copy.drawPile.add(playerHands.get(p));
                 }
             }
-            copy.drawPile.shuffle(rnd);
+            copy.drawPile.shuffle(redeterminisationRnd);
 
             // Now we draw into the unknown player hands
             for (int p = 0; p < copy.playerHands.size(); p++) {
@@ -201,15 +201,15 @@ public class SGGameState extends AbstractGameState {
         return playerScore[playerId].getValue();
     }
 
-    public HashMap<SGCard.SGCardType, Counter>[] getPlayedCardTypes() {
+    public Map<SGCard.SGCardType, Counter>[] getPlayedCardTypes() {
         return playedCardTypes;
     }
 
-    public HashMap<SGCard.SGCardType, Counter>[] getPlayedCardTypesAllGame() {
+    public Map<SGCard.SGCardType, Counter>[] getPlayedCardTypesAllGame() {
         return playedCardTypesAllGame;
     }
 
-    public HashMap<SGCard.SGCardType, Counter>[] getPointsPerCardType() {
+    public Map<SGCard.SGCardType, Counter>[] getPointsPerCardType() {
         return pointsPerCardType;
     }
 

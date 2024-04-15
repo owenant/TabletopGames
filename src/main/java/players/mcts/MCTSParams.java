@@ -33,7 +33,7 @@ public class MCTSParams extends PlayerParameters {
     public double MASTGamma = 0.5;
     public double MASTBoltzmann = 0.1;
     public double exp3Boltzmann = 0.1;
-    public double hedgeBoltzmann = 0.1;
+    public double hedgeBoltzmann = 100;
     public MCTSEnums.Strategies expansionPolicy = RANDOM;
     public MCTSEnums.SelectionPolicy selectionPolicy = SIMPLE;  // In general better than ROBUST
     public MCTSEnums.TreePolicy treePolicy = UCB;
@@ -59,13 +59,16 @@ public class MCTSParams extends PlayerParameters {
     public MCTSEnums.RolloutTermination rolloutTermination = DEFAULT;
     public IStateHeuristic heuristic = AbstractGameState::getHeuristicScore;
     public IActionKey MASTActionKey;
+    public IStateKey MCGSStateKey;
+    public boolean MCGSExpandAfterClash = true;
     public double MASTDefaultValue = 0.0;
+    public double firstPlayUrgency = 1000000000.0;
 
     public MCTSParams() {
         addTunableParameter("K", Math.sqrt(2), Arrays.asList(0.0, 0.1, 1.0, Math.sqrt(2), 3.0, 10.0));
         addTunableParameter("MASTBoltzmann", 0.1);
         addTunableParameter("exp3Boltzmann", 0.1);
-        addTunableParameter("hedgeBoltzmann", 0.1);
+        addTunableParameter("hedgeBoltzmann", 100.0);
         addTunableParameter("rolloutLength", 10, Arrays.asList(0, 3, 10, 30, 100));
         addTunableParameter("maxTreeDepth", 10, Arrays.asList(1, 3, 10, 30, 100));
         addTunableParameter("rolloutType", RANDOM, Arrays.asList(MCTSEnums.Strategies.values()));
@@ -77,7 +80,7 @@ public class MCTSParams extends PlayerParameters {
         addTunableParameter("opponentModelParams", ITunableParameters.class);
         addTunableParameter("opponentModel", new RandomPlayer());
         addTunableParameter("information", Open_Loop, Arrays.asList(MCTSEnums.Information.values()));
-        addTunableParameter("selectionPolicy", ROBUST, Arrays.asList(MCTSEnums.SelectionPolicy.values()));
+        addTunableParameter("selectionPolicy", SIMPLE, Arrays.asList(MCTSEnums.SelectionPolicy.values()));
         addTunableParameter("treePolicy", UCB, Arrays.asList(MCTSEnums.TreePolicy.values()));
         addTunableParameter("opponentTreePolicy", OneTree, Arrays.asList(MCTSEnums.OpponentTreePolicy.values()));
         addTunableParameter("exploreEpsilon", 0.1);
@@ -87,6 +90,7 @@ public class MCTSParams extends PlayerParameters {
         addTunableParameter("MAST", Rollout, Arrays.asList(MCTSEnums.MASTType.values()));
         addTunableParameter("MASTGamma", 0.5, Arrays.asList(0.0, 0.5, 0.9, 1.0));
         addTunableParameter("expertIterationSpecification", "");
+        addTunableParameter("advantageFunction", "");
         addTunableParameter("biasVisits", 0, Arrays.asList(0, 1, 3, 10, 30, 100));
         addTunableParameter("progressiveWideningConstant", 0.0, Arrays.asList(0.0, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0));
         addTunableParameter("progressiveWideningExponent", 0.0, Arrays.asList(0.0, 0.1, 0.2, 0.3, 0.5));
@@ -99,6 +103,9 @@ public class MCTSParams extends PlayerParameters {
         addTunableParameter("paranoid", false);
         addTunableParameter("MASTActionKey", IActionKey.class);
         addTunableParameter("MASTDefaultValue", 0.0);
+        addTunableParameter("MCGSStateKey", IStateKey.class);
+        addTunableParameter("MCGSExpandAfterClash", true);
+        addTunableParameter("FPU", 1000000000.0);
     }
 
     @Override
@@ -151,9 +158,12 @@ public class MCTSParams extends PlayerParameters {
 
         advantageFunction = (IActionHeuristic) getParameterValue("advantageFunction");
         heuristic = (IStateHeuristic) getParameterValue("heuristic");
+        MCGSStateKey = (IStateKey) getParameterValue("MCGSStateKey");
+        MCGSExpandAfterClash = (boolean) getParameterValue("MCGSExpandAfterClash");
         rolloutPolicyParams = (TunableParameters) getParameterValue("rolloutPolicyParams");
         opponentModelParams = (TunableParameters) getParameterValue("opponentModelParams");
         // we then null those elements of params which are constructed (lazily) from the above
+        firstPlayUrgency = (double) getParameterValue("FPU");
         opponentModel = null;
         rolloutPolicy = null;
     }

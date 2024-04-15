@@ -30,8 +30,9 @@ public class MCTSTreeActionStatisticsListener extends ActionFeatureListener {
      * @param actionFeatures - the additional features used for Q
      */
     public MCTSTreeActionStatisticsListener(IStateFeatureVector stateFeatures, IActionFeatureVector actionFeatures,
-                                            int visitThreshold, int maxDepth, ActionTargetType actionTarget) {
-        super(actionFeatures, stateFeatures, Event.GameEvent.ACTION_CHOSEN, true);
+                                            int visitThreshold, int maxDepth, ActionTargetType actionTarget,
+                                            String fileName) {
+        super(actionFeatures, stateFeatures, Event.GameEvent.ACTION_CHOSEN, true, fileName);
         this.actionTarget = actionTarget;
         this.visitThreshold = visitThreshold;
         this.maxDepth = maxDepth;
@@ -70,13 +71,13 @@ public class MCTSTreeActionStatisticsListener extends ActionFeatureListener {
             // process this node
             // we record its depth, value, visits, and the full feature list
             int player = node.getActor();
-            double stateValue = node.getTotValue()[player] / node.getVisits();
+            double stateValue = node.nodeValue(player);
             List<AbstractAction> actionsFromState = forwardModel.computeAvailableActions(node.state);
             Map<AbstractAction, Double> actionTargets = new HashMap<>();
             AbstractAction bestAction = null;
             double bestValue = Double.NEGATIVE_INFINITY;
             for (AbstractAction action : actionsFromState) {
-                if (node.children.get(action) == null) {
+                if (node.actionValues.get(action) == null) {
                     actionTargets.put(action, 0.0);  // we have no data for this action
                     continue;
                 }
