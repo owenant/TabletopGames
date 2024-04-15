@@ -1,0 +1,11 @@
+Game: Dominion, Players: 2, GamesPerMatchup: 50, Mode: NO_SELF_PLAY
+MCTS_BudgetLowSkill got 15.00 points. MCTS_BudgetLowSkill won 15.0% of the 100 games of the tournament. MCTS_BudgetLowSkill won 15.0% of the 100 games it played during the tournament.
+MCTS_BudgetLowSkill won 15.0% of the 100 games against BigMoneyWithGardens.
+
+BigMoneyWithGardens got 85.00 points. BigMoneyWithGardens won 85.0% of the 100 games of the tournament. BigMoneyWithGardens won 85.0% of the 100 games it played during the tournament.
+BigMoneyWithGardens won 85.0% of the 100 games against MCTS_BudgetLowSkill.
+
+---- Ranking ---- 
+BigMoneyWithGardens: Win rate 0.85 +/- 0.01	Mean Ordinal 1.15 +/- 0.01
+MCTS_BudgetLowSkill: Win rate 0.15 +/- 0.01	Mean Ordinal 1.85 +/- 0.01
+

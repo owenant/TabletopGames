@@ -1,0 +1,11 @@
+Game: Dominion, Players: 2, GamesPerMatchup: 50, Mode: NO_SELF_PLAY
+MCTS_BudgetMediumSkill got 83.00 points. MCTS_BudgetMediumSkill won 82.0% of the 100 games of the tournament. MCTS_BudgetMediumSkill won 82.0% of the 100 games it played during the tournament.
+MCTS_BudgetMediumSkill won 82.0% of the 100 games against BigMoneyWithGardens.
+
+BigMoneyWithGardens got 17.00 points. BigMoneyWithGardens won 16.0% of the 100 games of the tournament. BigMoneyWithGardens won 16.0% of the 100 games it played during the tournament.
+BigMoneyWithGardens won 16.0% of the 100 games against MCTS_BudgetMediumSkill.
+
+---- Ranking ---- 
+MCTS_BudgetMediumSkill: Win rate 0.83 +/- 0.01	Mean Ordinal 1.16 +/- 0.01
+BigMoneyWithGardens: Win rate 0.17 +/- 0.01	Mean Ordinal 1.82 +/- 0.01
+

@@ -1,0 +1,11 @@
+Game: Dominion, Players: 2, GamesPerMatchup: 50, Mode: NO_SELF_PLAY
+MCTS_BudgetLowSkill got 2.00 points. MCTS_BudgetLowSkill won 2.0% of the 100 games of the tournament. MCTS_BudgetLowSkill won 2.0% of the 100 games it played during the tournament.
+MCTS_BudgetLowSkill won 2.0% of the 100 games against DoubleWitch.
+
+DoubleWitch got 98.00 points. DoubleWitch won 98.0% of the 100 games of the tournament. DoubleWitch won 98.0% of the 100 games it played during the tournament.
+DoubleWitch won 98.0% of the 100 games against MCTS_BudgetLowSkill.
+
+---- Ranking ---- 
+DoubleWitch: Win rate 0.98 +/- 0.00	Mean Ordinal 1.02 +/- 0.00
+MCTS_BudgetLowSkill: Win rate 0.02 +/- 0.00	Mean Ordinal 1.98 +/- 0.00
+
