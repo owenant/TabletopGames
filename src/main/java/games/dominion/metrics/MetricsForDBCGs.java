@@ -55,12 +55,15 @@ public class MetricsForDBCGs {
   }
 
   public static void runTournament() {
-      int gamesPerMatchup = 1;
-      String destdir = "/Users/anthonyowen/GitProjects/TableTopGames/ResultsFiles/Tournament";
+      int gamesPerMatchup = 250;
+      String destdir = "/Users/anthonyowen/GitProjects/TableTopGames_ForThesisWork/ResultsFiles/Tournament";
       String mctsJsonDir = "/JSON for Dominion MCTS";
       String mctsBudgetLow = destdir + mctsJsonDir + "/DomMCTSLowSkill_Budget_50.json";
-      String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500.json";
-      String mctsBudgetHigh = destdir + mctsJsonDir + "/DomMCTSHighSkill_Budget_5000.json";
+      //String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500.json";
+      //String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500_WinOnlyHeuristic.json";
+      String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500_RO_300.json";
+      //String mctsBudgetHigh = destdir + mctsJsonDir + "/DomMCTSHighSkill_Budget_5000.json";
+      String mctsBudgetHigh = destdir + mctsJsonDir + "/DomMCTSHighSkill_Budget_5000_WinOnlyHeuristic.json";
       String tournamentResultsfilename = destdir + "/DominionTournamentResults.txt";
       String destdirGenericMetrics = destdir + "/Listeners/GenericMetrics";
       String destdirDominionMetrics = destdir + "/Listeners/DominionMetrics";
@@ -108,22 +111,28 @@ public class MetricsForDBCGs {
       //set up random player
       RandomPlayer rndPlayer = new RandomPlayer();
       rndPlayer.setName("RandomPlayer");
+      RandomPlayer rndPlayerOpp = new RandomPlayer();
+      rndPlayer.setName("RandomPlayer");
 
       //set up big money with gardens
       BigMoneyWithGardensSD bmwgPlayer = new BigMoneyWithGardensSD();
       bmwgPlayer.setName("BigMoneyWithGardens");
 
-      //agents.add(new DoubleWitchSD());
-      agents.add(mctsplayerLow);
-      agents.add(mctsplayerLowOpp);
+      //set up DW
+      DoubleWitchSD dwPlayer = new DoubleWitchSD();
+      dwPlayer.setName("DoubleWitch");
+
+      //agents.add(mctsplayerLow);
+      //agents.add(mctsplayerLowOpp);
       //agents.add(bmwgPlayer);
+      //agents.add(dwPlayer);
       //agents.add(centroidAgent);
-      //agents.add(mctsplayerMedium);
-      //agents.add(mctsplayerMediumOpp);
+      agents.add(mctsplayerMedium);
+      agents.add(mctsplayerMediumOpp);
       //agents.add(mctsplayerHigh);
       //agents.add(mctsplayerHighOpp);
-      //agents.add(new RandomPlayer());
-      //agents.add(new BigMoneyWithGardensSD());
+      //agents.add(rndPlayer);
+      //agents.add(rndPlayerOpp);
 
       //set-up game type and other tournament parameters
       GameType gameToPlay = Dominion;

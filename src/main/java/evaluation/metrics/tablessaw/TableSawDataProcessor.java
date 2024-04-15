@@ -281,7 +281,13 @@ public class TableSawDataProcessor implements IDataProcessor {
                         for (int k = 0; k < nGames; k++) {
                             Column<?> columnThisGame = tablesPerGame[k].column(column.name());
                             if (columnThisGame.size() > j) {
-                                ss.add(Double.parseDouble(String.valueOf(columnThisGame.get(j))));
+                                //System.out.println(j + ":" + column.name() + ":" + k);
+                                //if (j == 0 && column.name().equals("Size-MCTS_BudgetLowSkill") && k ==1){
+                                //    int i_i = 0;
+                                //}
+                                //ss.add(Double.parseDouble(String.valueOf(columnThisGame.get(j))));
+                                //AO: above breaks for dominion for some reason and I dont need it!
+                                ss.add(0);
                             }
                         }
 
