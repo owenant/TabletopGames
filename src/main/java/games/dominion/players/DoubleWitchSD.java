@@ -19,6 +19,10 @@ import java.util.Map;
 //be used with other Kingdom card selections
 public class DoubleWitchSD extends AbstractPlayer {
 
+    public DoubleWitchSD() {
+        super(null, "DoubleWitchSD");
+    }
+
     /**
      * Generate a valid action to play in the game. Valid actions can be found by accessing
      * AbstractGameState.getActions()
@@ -118,3 +122,4 @@ public class DoubleWitchSD extends AbstractPlayer {
         return Collections.emptyMap();
     }
 }
+

@@ -34,8 +34,9 @@ public class CentroidPlayer extends AbstractPlayer {
     //centroid path gives for each round the target card amounts for each card type
     public ArrayList<Map<CardType, Double>> centroidPath;
     public MCTSPlayer mctsActionPlayer;
+    public CentroidPlayer(String centroidJsonFile, String MCTSFileForActionPhase) {
+        super(null, "CentroidPlayer");
 
-    public CentroidPlayer(String centroidJsonFile, String MCTSFileForActionPhase){
         //read data
         JSONUtils jsonSupport = new JSONUtils();
         JSONObject centroidJSON = jsonSupport.loadJSONFile(centroidJsonFile);
@@ -60,9 +61,9 @@ public class CentroidPlayer extends AbstractPlayer {
         }
 
         //create array of Maps
-        ArrayList<Map<CardType, Double>> centroidPathTmp = new ArrayList<Map<CardType, Double>>(maxRounds+1);
+        ArrayList<Map<CardType, Double>> centroidPathTmp = new ArrayList<Map<CardType, Double>>(maxRounds + 1);
         //initialise empty maps for each round
-        for (int round = 0; round <= maxRounds; round++){
+        for (int round = 0; round <= maxRounds; round++) {
             centroidPathTmp.add(round, new HashMap<CardType, Double>());
         }
 
@@ -72,7 +73,7 @@ public class CentroidPlayer extends AbstractPlayer {
             Object keyValue = centroidJSON.get(keyStr);
             int index = keyStr.lastIndexOf('R');
             Integer round_no = Integer.valueOf(keyStr.substring(index + 1, keyStr.length()));
-            String cardTypeStr = keyStr.substring(0, index-1);
+            String cardTypeStr = keyStr.substring(0, index - 1);
             Double amount = (Double) keyValue;
 
             //extract existing map
@@ -192,7 +193,6 @@ public class CentroidPlayer extends AbstractPlayer {
 
         this.centroidPath = centroidPathTmp;
     }
-
     public AbstractAction _getAction(AbstractGameState gameState, List<AbstractAction> possibleActions) {
 
         //Loop over all possible actions and find the one that is closest to the centroid for the current round

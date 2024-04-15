@@ -1,4 +1,4 @@
-package games.dominion.stats;
+package games.dominion.metrics;
 
 import static evaluation.metrics.Event.GameEvent.ACTION_CHOSEN;
 

@@ -1,4 +1,4 @@
-package games.dominion.stats;
+package games.dominion.metrics;
 
 import static games.dominion.DominionConstants.DeckType.DISCARD;
 import static games.dominion.DominionConstants.DeckType.DRAW;

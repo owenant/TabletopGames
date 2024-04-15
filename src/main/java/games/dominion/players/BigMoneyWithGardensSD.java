@@ -17,8 +17,11 @@ import java.util.Map;
 
 //Warning: this BigMoneyWithGardens player is designed for use with Size Distortion Kingdom cards and shouldnt
 //be used with other Kingdom card selections
-//TODO: Add workshop purchase?
 public class BigMoneyWithGardensSD extends AbstractPlayer {
+
+    public BigMoneyWithGardensSD() {
+        super(null, "BigMoneyWithGardensSD");
+    }
 
     /**
      * Generate a valid action to play in the game. Valid actions can be found by accessing
