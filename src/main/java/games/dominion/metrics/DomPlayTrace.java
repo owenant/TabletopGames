@@ -3,6 +3,7 @@ package games.dominion.metrics;
 import static games.dominion.DominionConstants.DeckType.DISCARD;
 import static games.dominion.DominionConstants.DeckType.DRAW;
 import static games.dominion.DominionConstants.DeckType.HAND;
+import static games.dominion.DominionConstants.DeckType.TABLE;
 
 import core.AbstractGameState;
 import games.dominion.DominionGameState;
@@ -38,6 +39,7 @@ public class DomPlayTrace extends AbstractStateFeature {
           return tgtCard.equals(c) ? 1 : 0;};
         retValue[i] += state.getTotal(playerID, HAND, cardvaluer);
         retValue[i] += state.getTotal(playerID, DISCARD, cardvaluer);
+        retValue[i] += state.getTotal(playerID, TABLE, cardvaluer);
         retValue[i] += state.getTotal(playerID, DRAW, cardvaluer);
       }else{
         //set to zero any cards that are not implemented
