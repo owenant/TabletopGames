@@ -201,9 +201,10 @@ public class CentroidPlayer extends AbstractPlayer {
         DominionGameState state = (DominionGameState) gameState;
         int player = state.getCurrentPlayer();
         int round_count = state.getRoundCounter();
+        DominionGameState.DominionGamePhase phase = (DominionGameState.DominionGamePhase) state.getGamePhase();
 
         //use MCTS for action phase, then for buy phase use centroid if possible otherwise BMWG
-        if (state.getGamePhase() == DominionGameState.DominionGamePhase.Play){
+        if (phase == DominionGameState.DominionGamePhase.Play){
             return this.mctsActionPlayer._getAction(state, possibleActions);
         }else{
             if(round_count < centroidPath.size()) {
@@ -250,7 +251,7 @@ public class CentroidPlayer extends AbstractPlayer {
                     } else if (cash >= 2 && (noOfEstateInSupply > 0)) {
                         return new BuyCard(CardType.ESTATE, player);
                     } else {
-                        return new EndPhase();
+                        return new EndPhase(phase);
                     }
                 } else {
                     if (cash >= 6 && (noOfGoldInSupply > 0)) {
@@ -261,7 +262,7 @@ public class CentroidPlayer extends AbstractPlayer {
                 }
 
                 //if we get here we just need to do nothing
-                return new EndPhase();
+                return new EndPhase(phase);
             }
         }
     }

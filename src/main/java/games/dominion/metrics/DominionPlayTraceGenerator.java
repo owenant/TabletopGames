@@ -41,11 +41,12 @@ public class DominionPlayTraceGenerator{
   }
 
     public static void runTournament() {
-        int gamesPerMatchup = 1;
+        int gamesPerMatchup = 100;
         String destdir = "/Users/anthonyowen/GitProjects/TableTopGames_ForDominionPlayTraces/ResultsFiles/Tournament";
         String mctsJsonDir = "/JSON for Dominion MCTS";
         String mctsBudgetLow = destdir + mctsJsonDir + "/DomMCTSLowSkill_Budget_50.json";
-        String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500.json";
+        //String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500.json";
+        String mctsBudgetMedium = destdir + mctsJsonDir + "/DomMCTSMediumSkill_Budget_500_WinOnlyHeuristic.json";
         String mctsBudgetHigh = destdir + mctsJsonDir + "/DomMCTSHighSkill_Budget_5000.json";
         String tournamentResultsfilename = destdir + "/DominionTournamentResults.txt";
         String destdirGenericMetrics = destdir + "/Listeners/GenericMetrics";
@@ -102,15 +103,15 @@ public class DominionPlayTraceGenerator{
         //agents.add(mctsplayerLow);
         //agents.add(mctsplayerLowOpp);
         //agents.add(centroidAgent);
-        //agents.add(mctsplayerMedium);
-        //agents.add(mctsplayerMediumOpp);
+        agents.add(mctsplayerMedium);
+        agents.add(mctsplayerMediumOpp);
         //agents.add(mctsplayerHigh);
         //agents.add(mctsplayerHighOpp);
         //agents.add(rndPlayer);
         //agents.add(rndPlayerOpp);
-        agents.add(new BigMoneyWithGardensSD());
+        //agents.add(new BigMoneyWithGardensSD());
         //agents.add(new BigMoney());
-        agents.add(new DoubleWitchSD());
+        //agents.add(new DoubleWitchSD());
 
         //set-up game type and other tournament parameters
         GameType gameToPlay = Dominion;

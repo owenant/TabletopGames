@@ -42,7 +42,8 @@ public class BigMoneyWithGardensSD extends AbstractPlayer {
         int noOfSilverInSupply = state.cardsOfType(CardType.SILVER, -1, DeckType.SUPPLY);
 
         //check that agent is in the buy phase
-        if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
+        DominionGameState.DominionGamePhase phase = (DominionGameState.DominionGamePhase) state.getGamePhase();
+        if(phase != DominionGameState.DominionGamePhase.Buy)
         {
             //possible actions in action phase for BigMoneyWithGardens in SD kingdom set, are react to bureaucrat
             // r bandit or do nothing
@@ -91,7 +92,7 @@ public class BigMoneyWithGardensSD extends AbstractPlayer {
                 } else if (cash >= 2 && (noOfEstateInSupply > 0)) {
                     return new BuyCard(CardType.ESTATE, player);
                 } else {
-                    return new EndPhase();
+                    return new EndPhase(phase);
                 }
             } else {
                 if (cash >= 6 && (noOfGoldInSupply > 0)) {
@@ -102,7 +103,7 @@ public class BigMoneyWithGardensSD extends AbstractPlayer {
             }
         }
         //if we get here we just need to do nothing
-        return new EndPhase();
+        return new EndPhase(phase);
     }
 
     @Override

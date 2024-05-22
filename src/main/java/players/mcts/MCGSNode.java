@@ -7,11 +7,12 @@ import java.util.*;
 
 public class MCGSNode extends SingleTreeNode {
 
-    private final Map<String, MCGSNode> transpositionMap = new HashMap<>();
+    private Map<String, MCGSNode> transpositionMap = new HashMap<>();
     public List<String> trajectory = new ArrayList<>();
 
     protected MCGSNode() {
     }
+
 
     @Override
     protected void instantiate(SingleTreeNode parent, AbstractAction actionToReach, AbstractGameState state) {
@@ -27,7 +28,7 @@ public class MCGSNode extends SingleTreeNode {
             throw new AssertionError("Unexpected?");
         }
         graphRoot.transpositionMap.put(key, node);
-     //   System.out.println("Adding to transposition table: " + key);
+        //   System.out.println("Adding to transposition table: " + key);
     }
 
     /**
@@ -47,7 +48,7 @@ public class MCGSNode extends SingleTreeNode {
             if (params.MCGSExpandAfterClash) {
                 throw new AssertionError("Unexpected?");
             } else {
-                MCGSNode retValue =  graphRoot.transpositionMap.get(key);
+                MCGSNode retValue = graphRoot.transpositionMap.get(key);
                 retValue.setActionsFromOpenLoopState(openLoopState);
                 return retValue;
             }
@@ -89,6 +90,16 @@ public class MCGSNode extends SingleTreeNode {
         super.advanceState(gs, act, inRollout);
     }
 
+    @Override
+    protected void resetDepth(SingleTreeNode newRoot) {
+        int depthDelta = depth;
+        root = this;
+        depth = 0;
+        for (MCGSNode node : transpositionMap.values()) {
+            node.depth -= depthDelta;
+            node.root = this;
+        }
+    }
 
     /**
      * Back up the value of the child through all parents. Increase number of visits and total value.
@@ -105,20 +116,24 @@ public class MCGSNode extends SingleTreeNode {
                     nRoot.trajectory.size() + " != " + nRoot.actionsInTree.size());
         }
 
-        for (int i = 0; i < nRoot.trajectory.size(); i++) {
+        for (int i = nRoot.trajectory.size() - 1; i >= 0; i--) {
             String key = nRoot.trajectory.get(i);
             MCGSNode node = nRoot.transpositionMap.get(key);
             AbstractAction action = nRoot.actionsInTree.get(i).b;
             if (node == null) {
                 throw new AssertionError("Node should not be null");
             }
-            node.backUpSingleNode(action, result);
+            result = node.backUpSingleNode(action, result);
         }
         nRoot.trajectory.clear();
     }
 
     public Map<String, MCGSNode> getTranspositionMap() {
-        return new HashMap<>(transpositionMap);
+        return transpositionMap;
+    }
+
+    public void setTranspositionMap(Map<String, MCGSNode> transposition) {
+        transpositionMap = transposition;
     }
 
 }

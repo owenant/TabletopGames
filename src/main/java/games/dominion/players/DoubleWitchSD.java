@@ -47,7 +47,8 @@ public class DoubleWitchSD extends AbstractPlayer {
         int noOfSilverInSupply = state.cardsOfType(CardType.SILVER, -1, DeckType.SUPPLY);
 
         //check that agent is in the buy phase
-        if(gameState.getGamePhase() != DominionGameState.DominionGamePhase.Buy)
+        DominionGameState.DominionGamePhase phase = (DominionGameState.DominionGamePhase) state.getGamePhase();
+        if(phase != DominionGameState.DominionGamePhase.Buy)
         {
             //possible actions in action phase for Double Witch in SD kingdom set, are play witch, do nothing,
             //or react to bureaucrat or bandit.
@@ -104,7 +105,7 @@ public class DoubleWitchSD extends AbstractPlayer {
             }
         }
         //if we get here we just need to do nothing
-        return new EndPhase();
+        return new EndPhase(phase);
     }
 
     @Override
